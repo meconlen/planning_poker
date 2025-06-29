@@ -3,6 +3,28 @@ planning-poker
 planning-poker.exe
 main
 
+# Go binaries (catch any other Go build outputs)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Go build cache
+.cache/
+
+# Documentation build artifacts
+docs/*.pdf
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.bbl
+docs/*.blg
+
 # Go test coverage
 *.out
 
