@@ -7,7 +7,8 @@ help:
 	@echo "Planning Poker Infrastructure Commands:"
 	@echo ""
 	@echo "Packer Commands:"
-	@echo "  packer-validate    Validate Packer configuration"
+	@echo "  packer-init       Initialize Packer (download plugins)"
+	@echo "  packer-validate   Validate Packer configuration"
 	@echo "  packer-build      Build Packer image"
 	@echo ""
 	@echo "Terraform Commands:"
@@ -32,11 +33,15 @@ check-deps:
 	@echo "✅ All dependencies are installed"
 
 # Packer targets
-packer-validate: check-deps
+packer-init: check-deps
+	@echo "Initializing Packer (downloading plugins)..."
+	cd packer && packer init planning-poker.pkr.hcl
+
+packer-validate: packer-init
 	@echo "Validating Packer configuration..."
 	cd packer && packer validate planning-poker.pkr.hcl
 
-packer-build: check-deps
+packer-build: packer-validate
 	@echo "Building Packer image..."
 	@if [ -z "$$LINODE_TOKEN" ]; then \
 		echo "❌ LINODE_TOKEN environment variable is required"; \

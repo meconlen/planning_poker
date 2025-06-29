@@ -709,8 +709,12 @@ Generate the token at: \url{https://cloud.linode.com/profile/tokens}
 # Export Linode API token
 export LINODE_TOKEN="your-linode-api-token-here"
 
+# Initialize Packer plugins (first-time setup)
+cd infrastructure/packer
+packer init planning-poker.pkr.hcl
+
 # Configure Terraform variables
-cd infrastructure/terraform
+cd ../terraform
 cp terraform.tfvars.example terraform.tfvars
 
 # Edit terraform.tfvars with:
@@ -745,9 +749,17 @@ make show              # Display Terraform outputs
 For detailed control or troubleshooting:
 
 \begin{lstlisting}[language=bash, caption=Manual Deployment Process]
-# Step 1: Build Packer image
+# Step 1: Initialize and build Packer image
 cd infrastructure/packer
+
+# Initialize Packer (download required plugins)
+packer init planning-poker.pkr.hcl
+
+# Validate configuration
 packer validate planning-poker.pkr.hcl
+
+# Build the custom image
+packer build planning-poker.pkr.hcl
 packer build planning-poker.pkr.hcl
 
 # Step 2: Configure Terraform

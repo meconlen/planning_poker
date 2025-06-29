@@ -36,9 +36,6 @@ source "linode" "planning_poker" {
   image_description = "Planning Poker application image with Docker pre-installed"
   
   ssh_username = "root"
-  
-  # Tags for organization
-  tags = ["planning-poker", "docker", "packer"]
 }
 
 build {
