@@ -30,6 +30,19 @@ jobs:
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-bibtex-extra biber
+
+      - name: Build documentation
+        run: |
+          cd docs
+          make pdf
+          # Copy PDF to dist directory for release
+          mkdir -p ../dist
+          cp design.pdf ../dist/planning-poker-documentation.pdf
+
       - name: Build binaries
         run: |
           # Build for multiple platforms
@@ -195,6 +208,39 @@ jobs:
           - Improved Docker build process
           EOF
               ;;
+            0.8.0|0.8.1|0.8.2)
+              cat > release_notes.md << 'EOF'
+          ## 🛠️ Repository Cleanup and Documentation Automation
+          
+          Minor release focusing on repository maintenance and build process improvements.
+          
+          ### ✨ What's New in v0.8.2
+          - **📄 Automated Documentation**: PDF documentation now automatically built and included in releases
+          - **🧹 Repository Cleanup**: Removed accidentally committed binary files
+          - **⚙️ Improved Release Process**: Enhanced GitHub Actions workflow for complete automation
+          
+          ### 🔧 Technical Improvements
+          - Fixed .gitignore to properly exclude compiled binaries
+          - Integrated LaTeX PDF generation into release workflow
+          - Automated documentation build and attachment to releases
+          - Better release artifact organization
+          
+          ### 📦 Release Assets
+          This release includes:
+          - Cross-platform binaries (Linux, macOS, Windows)
+          - Docker image as compressed archive
+          - **NEW**: Complete project documentation (PDF)
+          
+          ### 🚀 Quick Start
+          ```bash
+          # Run with Docker
+          docker run -p 8080:8080 planning-poker:v0.8.2
+          
+          # Or download and run binary directly
+          # (See assets below for your platform)
+          ```
+          EOF
+              ;;
             *)
               cat > release_notes.md << 'EOF'
           ## Planning Poker Release
@@ -221,6 +267,7 @@ jobs:
             dist/planning-poker-darwin-arm64.tar.gz
             dist/planning-poker-windows-amd64.zip
             dist/planning-poker-docker-${{ steps.tag.outputs.tag }}.tar.gz
+            dist/planning-poker-documentation.pdf
           draft: false
           prerelease: false
         env:
