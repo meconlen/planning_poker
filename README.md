@@ -236,6 +236,33 @@ For production deployment, consider:
 5. **Rate Limiting**: Implement rate limiting for API endpoints
 6. **Monitoring**: Add logging and metrics collection
 
+### Option 1: Linode with Packer/Terraform (Recommended)
+
+Deploy to Linode with automated infrastructure:
+
+```bash
+# One-command deployment
+cd infrastructure
+export LINODE_TOKEN="your-token"
+make deploy
+```
+
+See [`infrastructure/README.md`](infrastructure/README.md) for detailed instructions.
+
+### Option 2: Manual Docker Deployment
+
+1. **Download the latest release**:
+   ```bash
+   # Download docker image from GitHub releases
+   wget https://github.com/meconlen/planning_poker/releases/latest/download/planning-poker-docker-VERSION.tar.gz
+   docker load < planning-poker-docker-VERSION.tar.gz
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -d -p 8080:8080 --restart unless-stopped planning-poker:latest
+   ```
+
 ## Monitoring CI/CD
 
 This project includes GitHub Actions for continuous integration and automated releases. You can monitor the CI/CD pipeline status using the GitHub CLI.
