@@ -194,6 +194,72 @@ For production deployment, consider:
 5. **Rate Limiting**: Implement rate limiting for API endpoints
 6. **Monitoring**: Add logging and metrics collection
 
+## Monitoring CI/CD
+
+This project includes GitHub Actions for continuous integration and automated releases. You can monitor the CI/CD pipeline status using the GitHub CLI.
+
+### Setup GitHub CLI
+
+1. **Install GitHub CLI**:
+   ```bash
+   # macOS
+   brew install gh
+   
+   # Linux
+   sudo apt install gh
+   
+   # Windows
+   winget install GitHub.cli
+   ```
+
+2. **Authenticate with GitHub**:
+   ```bash
+   gh auth login
+   ```
+
+### Monitor GitHub Actions
+
+Use the included monitoring scripts:
+
+```bash
+# Quick status check
+./scripts/check-actions.sh
+
+# Real-time monitoring
+./scripts/monitor-actions.sh watch
+
+# View latest logs
+./scripts/monitor-actions.sh logs
+
+# Custom status check (show last 3 runs)
+./scripts/check-actions.sh 3
+```
+
+### Useful GitHub CLI Commands
+
+```bash
+# List recent workflow runs
+gh run list --limit 10
+
+# View specific run details
+gh run view <run-id>
+
+# Watch current runs in real-time
+gh run watch
+
+# List all workflows
+gh workflow list
+
+# Rerun a failed workflow
+gh run rerun <run-id>
+
+# List releases
+gh release list
+
+# View release details
+gh release view <tag>
+```
+
 ## Contributing
 
 1. Fork the repository
