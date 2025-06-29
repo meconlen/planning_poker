@@ -21,6 +21,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24.4'
+          cache: false
+
+      - name: Verify Go version
+        run: go version
 
       - name: Get tag name
         id: tag
