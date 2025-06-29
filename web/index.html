@@ -5,202 +5,364 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning Poker</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .container {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        
-        .join-form {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
-        
-        button {
-            padding: 10px 20px;
-            background: #007bff;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin-bottom: 10px;
+        }
+
+        .session-info {
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .story-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .story-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
             font-size: 16px;
+            margin-bottom: 10px;
         }
-        
-        button:hover {
-            background: #0056b3;
+
+        .story-input:focus {
+            outline: none;
+            border-color: #667eea;
         }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .voting-section {
-            margin: 20px 0;
-        }
-        
+
         .voting-cards {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: center;
         }
-        
+
         .voting-card {
             width: 60px;
             height: 80px;
-            border: 2px solid #007bff;
+            background: white;
+            border: 2px solid #e9ecef;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            background: white;
-            font-weight: bold;
             font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #2c3e50;
         }
-        
+
         .voting-card:hover {
-            background: #e7f3ff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
+
         .voting-card.selected {
-            background: #007bff;
+            background: #667eea;
             color: white;
+            border-color: #667eea;
         }
-        
+
         .users-section {
-            margin: 20px 0;
+            margin-bottom: 30px;
         }
-        
-        .user-list {
-            display: flex;
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px;
-            flex-wrap: wrap;
         }
-        
+
         .user-card {
-            background: white;
+            background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            border: 2px solid #ddd;
-            min-width: 120px;
             text-align: center;
+            border: 2px solid transparent;
         }
-        
+
         .user-card.has-voted {
             border-color: #28a745;
             background: #d4edda;
         }
-        
+
+        .user-card.moderator {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        .user-card.moderator.has-voted {
+            border-color: #fd7e14;
+            background: #fef3e2;
+        }
+
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .moderator-badge {
+            background: #ffc107;
+            color: #212529;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .user-vote {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
         .controls {
-            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        
-        .controls button {
-            margin-right: 10px;
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
-        
-        .story-section {
-            margin: 20px 0;
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
         }
-        
-        .story-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
+
+        .btn-primary:hover {
+            background: #5a67d8;
         }
-        
-        .session-info {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 4px;
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: #28a745;
+        }
+
+        .disconnected {
+            background: #dc3545;
+        }
+
+        .join-form {
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
             margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
+    <div id="connectionStatus" class="connection-status disconnected">Disconnected</div>
+
     <!-- Join Form -->
     <div id="joinForm" class="join-form">
-        <h2>Join Planning Poker Session</h2>
-        <div class="form-group">
-            <label for="sessionId">Session ID:</label>
-            <input type="text" id="sessionId" placeholder="Enter session ID" required>
+        <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Planning Poker Session</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="joinTabBtn" onclick="showJoinTab()" class="btn btn-secondary" style="flex: 1;">Join Session</button>
+            <button id="createTabBtn" onclick="showCreateTab()" class="btn btn-primary" style="flex: 1;">Create Session</button>
         </div>
-        <div class="form-group">
-            <label for="userName">Your Name:</label>
-            <input type="text" id="userName" placeholder="Enter your name" required>
+
+        <!-- Join Existing Session -->
+        <div id="joinTab">
+            <div class="form-group">
+                <label for="sessionId">Session ID:</label>
+                <input type="text" id="sessionId" placeholder="Enter session ID" required>
+            </div>
+            <div class="form-group">
+                <label for="userName">Your Name:</label>
+                <input type="text" id="userName" placeholder="Enter your name" required>
+            </div>
+            <button onclick="joinSession()" class="btn btn-primary" style="width: 100%;">Join Session</button>
         </div>
-        <button onclick="joinSession()" style="width: 100%;">Join Session</button>
+
+        <!-- Create New Session -->
+        <div id="createTab" class="hidden">
+            <div class="form-group">
+                <label for="createUserName">Your Name:</label>
+                <input type="text" id="createUserName" placeholder="Enter your name" required>
+            </div>
+            <button onclick="createSession()" class="btn btn-success" style="width: 100%;">Create New Session</button>
+        </div>
+
+        <!-- Session Created -->
+        <div id="sessionCreated" class="hidden">
+            <h3 style="color: #28a745; text-align: center; margin-bottom: 20px;">✅ Session Created!</h3>
+            <div class="form-group">
+                <label for="sessionUrl">Share this URL with your team:</label>
+                <input type="text" id="sessionUrl" readonly style="background: #f8f9fa; cursor: pointer;" onclick="copyToClipboard()">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="copyToClipboard()" class="btn btn-secondary" style="flex: 1;">📋 Copy URL</button>
+                <button onclick="startSession()" class="btn btn-success" style="flex: 1;">🚀 Start Session</button>
+            </div>
+        </div>
     </div>
 
     <!-- Main App -->
     <div id="app" class="container hidden">
+        <div class="header">
+            <h1>🃏 Planning Poker</h1>
+            <p>Estimate story points collaboratively</p>
+        </div>
+
         <div class="session-info">
-            <strong>Session:</strong> <span id="currentSessionId"></span> | 
-            <strong>User:</strong> <span id="currentUserName"></span>
-        </div>
-
-        <div class="story-section">
-            <h3>Current Story</h3>
-            <input type="text" id="storyInput" class="story-input" placeholder="Enter the user story to estimate...">
-            <button onclick="setStory()">Set Story</button>
-        </div>
-
-        <div class="voting-section">
-            <h3>Your Vote</h3>
-            <div class="voting-cards">
-                <div class="voting-card" onclick="vote('0')">0</div>
-                <div class="voting-card" onclick="vote('1')">1</div>
-                <div class="voting-card" onclick="vote('2')">2</div>
-                <div class="voting-card" onclick="vote('3')">3</div>
-                <div class="voting-card" onclick="vote('5')">5</div>
-                <div class="voting-card" onclick="vote('8')">8</div>
-                <div class="voting-card" onclick="vote('13')">13</div>
-                <div class="voting-card" onclick="vote('21')">21</div>
-                <div class="voting-card" onclick="vote('?')">?</div>
+            <div>
+                <strong>Session:</strong> <span id="currentSessionId"></span>
+                <button id="shareBtn" onclick="shareSession()" class="btn btn-secondary" style="margin-left: 10px; padding: 5px 10px; font-size: 14px; display: none;">📋 Share</button>
+            </div>
+            <div>
+                <strong>User:</strong> <span id="currentUserName"></span>
             </div>
         </div>
 
-        <div class="users-section">
-            <h3>Team Members</h3>
-            <div id="userList" class="user-list">
-                <!-- Users will be populated by JavaScript -->
+        <div class="main-content">
+            <div class="story-section">
+                <h3 style="margin-bottom: 15px;">📝 Current Story</h3>
+                <input type="text" id="storyInput" class="story-input" placeholder="Enter the user story to estimate...">
+                <button id="setStoryBtn" onclick="setStory()" class="btn btn-secondary" style="display: none;">Set Story</button>
             </div>
-        </div>
 
-        <div class="controls">
-            <button onclick="revealVotes()">Reveal Votes</button>
-            <button onclick="newRound()">New Round</button>
+            <div class="voting-section">
+                <h3 style="margin-bottom: 20px; text-align: center;">🗳️ Your Vote</h3>
+                <div class="voting-cards">
+                    <div class="voting-card" onclick="vote('0')">0</div>
+                    <div class="voting-card" onclick="vote('0.5')">½</div>
+                    <div class="voting-card" onclick="vote('1')">1</div>
+                    <div class="voting-card" onclick="vote('2')">2</div>
+                    <div class="voting-card" onclick="vote('3')">3</div>
+                    <div class="voting-card" onclick="vote('5')">5</div>
+                    <div class="voting-card" onclick="vote('8')">8</div>
+                    <div class="voting-card" onclick="vote('13')">13</div>
+                    <div class="voting-card" onclick="vote('21')">21</div>
+                    <div class="voting-card" onclick="vote('?')">?</div>
+                    <div class="voting-card" onclick="vote('☕')">☕</div>
+                </div>
+            </div>
+
+            <div class="users-section">
+                <h3 style="margin-bottom: 20px;">👥 Team Members</h3>
+                <div id="usersGrid" class="users-grid">
+                    <!-- Users will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="revealBtn" onclick="revealVotes()" class="btn btn-success" style="display: none;">Reveal Votes</button>
+                <button id="newRoundBtn" onclick="newRound()" class="btn btn-primary" style="display: none;">New Round</button>
+                <button onclick="leaveSession()" class="btn btn-secondary">Leave Session</button>
+            </div>
         </div>
     </div>
 
@@ -208,7 +370,120 @@
         let socket = null;
         let currentSession = null;
         let currentUser = null;
+        let currentUserId = null;
+        let isModerator = false;
         let myVote = null;
+        let createdSessionId = null;
+
+        // UI Tab Management
+        function showJoinTab() {
+            document.getElementById('joinTab').classList.remove('hidden');
+            document.getElementById('createTab').classList.add('hidden');
+            document.getElementById('sessionCreated').classList.add('hidden');
+            document.getElementById('joinTabBtn').className = 'btn btn-primary';
+            document.getElementById('createTabBtn').className = 'btn btn-secondary';
+        }
+
+        function showCreateTab() {
+            document.getElementById('joinTab').classList.add('hidden');
+            document.getElementById('createTab').classList.remove('hidden');
+            document.getElementById('sessionCreated').classList.add('hidden');
+            document.getElementById('joinTabBtn').className = 'btn btn-secondary';
+            document.getElementById('createTabBtn').className = 'btn btn-primary';
+        }
+
+        // Generate random session ID
+        function generateSessionId() {
+            const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789'; // Removed confusing chars like O, 0, I, L
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Create new session
+        async function createSession() {
+            const userName = document.getElementById('createUserName').value.trim();
+
+            if (!userName) {
+                alert('Please enter your name');
+                return;
+            }
+
+            // Generate session ID
+            createdSessionId = generateSessionId();
+            
+            try {
+                // Create session on server
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sessionId: createdSessionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create session');
+                }
+
+                // Show session created UI
+                const sessionUrl = `${window.location.origin}?session=${createdSessionId}&user=${encodeURIComponent(userName)}`;
+                document.getElementById('sessionUrl').value = sessionUrl;
+                
+                document.getElementById('joinTab').classList.add('hidden');
+                document.getElementById('createTab').classList.add('hidden');
+                document.getElementById('sessionCreated').classList.remove('hidden');
+                
+                // Set the user name for when they start the session
+                currentUser = userName;
+                currentSession = createdSessionId;
+
+            } catch (error) {
+                console.error('Error creating session:', error);
+                alert('Failed to create session. Please try again.');
+            }
+        }
+
+        // Copy URL to clipboard
+        function copyToClipboard() {
+            const urlField = document.getElementById('sessionUrl');
+            urlField.select();
+            urlField.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                document.execCommand('copy');
+                alert('Session URL copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy URL. Please copy it manually.');
+            }
+        }
+
+        // Start the session (for session creator)
+        function startSession() {
+            connectWebSocket();
+        }
+
+        // Check for URL parameters on page load
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionParam = urlParams.get('session');
+            const userParam = urlParams.get('user');
+            
+            if (sessionParam && userParam) {
+                // Auto-fill and join session
+                document.getElementById('sessionId').value = sessionParam;
+                document.getElementById('userName').value = decodeURIComponent(userParam);
+                // Auto-join after a short delay
+                setTimeout(() => {
+                    joinSession();
+                }, 500);
+            }
+        });
 
         function joinSession() {
             const sessionId = document.getElementById('sessionId').value.trim();
@@ -229,157 +504,228 @@
         }
 
         function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws`;
-            
+            const wsUrl = `ws://localhost:8080/ws?session=${currentSession}&user=${encodeURIComponent(currentUser)}`;
             socket = new WebSocket(wsUrl);
 
             socket.onopen = function() {
-                console.log('Connected to server');
-                
-                // Send join message
-                const joinMessage = {
-                    sessionId: currentSession,
-                    userName: currentUser
-                };
-                socket.send(JSON.stringify(joinMessage));
-                
-                // Show main app
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'connection-status connected';
                 document.getElementById('joinForm').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
             };
 
-            socket.onmessage = function(event) {
-                const message = JSON.parse(event.data);
-                
-                if (message.type === 'session_state') {
-                    updateSessionState(message.payload);
-                }
+            socket.onclose = function() {
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
             };
 
-            socket.onclose = function() {
-                console.log('Disconnected from server');
-                alert('Connection lost. Please refresh and rejoin.');
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
             };
 
             socket.onerror = function(error) {
                 console.error('WebSocket error:', error);
-                alert('Connection error. Please try again.');
+                alert('Failed to connect to server');
             };
         }
 
-        function updateSessionState(session) {
-            // Update story
-            if (session.story !== document.getElementById('storyInput').value) {
-                document.getElementById('storyInput').value = session.story || '';
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'session_state':
+                    updateSessionState(message.data);
+                    break;
+                case 'user_joined':
+                    console.log('User joined:', message.data);
+                    break;
+                case 'user_left':
+                    console.log('User left:', message.data);
+                    break;
             }
+        }
+
+        function updateSessionState(state) {
+            // Update story
+            document.getElementById('storyInput').value = state.currentStory || '';
+
+            // Find current user and check if they're moderator
+            let currentUserData = null;
+            Object.values(state.users || {}).forEach(user => {
+                if (user.name === currentUser) {
+                    currentUserData = user;
+                    currentUserId = user.id;
+                    isModerator = user.isModerator;
+                }
+            });
+
+            // Show/hide moderator controls
+            const revealBtn = document.getElementById('revealBtn');
+            const newRoundBtn = document.getElementById('newRoundBtn');
+            const setStoryBtn = document.getElementById('setStoryBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const storyInput = document.getElementById('storyInput');
             
-            // Update user list
-            const userList = document.getElementById('userList');
-            userList.innerHTML = '';
-            
-            Object.values(session.users).forEach(user => {
+            if (isModerator) {
+                revealBtn.style.display = 'inline-block';
+                newRoundBtn.style.display = 'inline-block';
+                setStoryBtn.style.display = 'inline-block';
+                shareBtn.style.display = 'inline-block';
+                storyInput.disabled = false;
+                storyInput.placeholder = 'Enter the user story to estimate... (Moderator)';
+            } else {
+                revealBtn.style.display = 'none';
+                newRoundBtn.style.display = 'none';
+                setStoryBtn.style.display = 'none';
+                shareBtn.style.display = 'none';
+                storyInput.disabled = true;
+                storyInput.placeholder = 'Only the moderator can set stories';
+            }
+
+            // Update users
+            const usersGrid = document.getElementById('usersGrid');
+            usersGrid.innerHTML = '';
+
+            Object.values(state.users || {}).forEach(user => {
                 const userCard = document.createElement('div');
                 userCard.className = 'user-card';
                 
-                if (user.hasVoted) {
+                if (user.vote && user.vote !== '?') {
                     userCard.classList.add('has-voted');
                 }
-                
-                let content = `<div><strong>${user.name}</strong></div>`;
-                
-                if (session.votesRevealed && user.vote) {
-                    content += `<div>Vote: ${user.vote}</div>`;
-                } else if (user.hasVoted) {
-                    content += `<div>✓ Voted</div>`;
-                } else {
-                    content += `<div>Waiting...</div>`;
+
+                if (user.isModerator) {
+                    userCard.classList.add('moderator');
                 }
-                
-                userCard.innerHTML = content;
-                userList.appendChild(userCard);
+
+                const voteDisplay = state.votesRevealed && user.vote ? user.vote : (user.vote ? '✓' : '');
+                const moderatorBadge = user.isModerator ? '<span class="moderator-badge">MODERATOR</span>' : '';
+
+                userCard.innerHTML = `
+                    <div class="user-name">${user.name}${moderatorBadge}</div>
+                    <div class="user-vote">${voteDisplay}</div>
+                `;
+
+                usersGrid.appendChild(userCard);
             });
         }
 
-        function vote(value) {
-            if (!socket || socket.readyState !== WebSocket.OPEN) {
-                return;
+        function sendMessage(type, data = {}) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: type,
+                    data: data
+                }));
             }
-            
+        }
+
+        function vote(value) {
             // Update UI
             document.querySelectorAll('.voting-card').forEach(card => {
                 card.classList.remove('selected');
             });
+            
             event.target.classList.add('selected');
-            
             myVote = value;
-            
+
             // Send vote to server
-            const message = {
-                type: 'vote',
-                payload: value
-            };
-            socket.send(JSON.stringify(message));
+            sendMessage('vote', { vote: value });
         }
 
         function revealVotes() {
-            if (!socket || socket.readyState !== WebSocket.OPEN) {
+            if (!isModerator) {
+                alert('Only the moderator can reveal votes');
                 return;
             }
-            
-            const message = {
-                type: 'reveal'
-            };
-            socket.send(JSON.stringify(message));
+            sendMessage('reveal');
         }
 
         function newRound() {
-            if (!socket || socket.readyState !== WebSocket.OPEN) {
+            if (!isModerator) {
+                alert('Only the moderator can start a new round');
                 return;
             }
             
-            // Clear local vote selection
+            // Clear UI
             document.querySelectorAll('.voting-card').forEach(card => {
                 card.classList.remove('selected');
             });
             myVote = null;
-            
-            const message = {
-                type: 'new_round'
-            };
-            socket.send(JSON.stringify(message));
+
+            sendMessage('new_round');
         }
 
         function setStory() {
-            if (!socket || socket.readyState !== WebSocket.OPEN) {
+            if (!isModerator) {
+                alert('Only the moderator can set stories');
                 return;
             }
             
             const story = document.getElementById('storyInput').value.trim();
-            
-            const message = {
-                type: 'set_story',
-                payload: story
-            };
-            socket.send(JSON.stringify(message));
+            if (story) {
+                sendMessage('set_story', { story: story });
+            }
         }
 
-        // Allow Enter key in inputs
-        document.getElementById('sessionId').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('userName').focus();
+        function shareSession() {
+            if (!currentSession) {
+                alert('No active session to share');
+                return;
             }
-        });
-
-        document.getElementById('userName').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                joinSession();
+            
+            const shareUrl = `${window.location.origin}${window.location.pathname}?session=${currentSession}`;
+            
+            // Try to use the modern Clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('Session URL copied to clipboard!\n\nShare this URL with your team members so they can join.');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    fallbackCopyToClipboard(shareUrl);
+                });
+            } else {
+                fallbackCopyToClipboard(shareUrl);
             }
-        });
+        }
 
-        document.getElementById('storyInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                setStory();
+        function fallbackCopyToClipboard(text) {
+            // Fallback for older browsers or non-secure contexts
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('Session URL copied to clipboard!\n\nShare this URL with your team members so they can join.');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                prompt('Copy this URL to share with your team:', text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function leaveSession() {
+            if (socket) {
+                socket.close();
+            }
+            
+            document.getElementById('joinForm').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+            
+            // Reset form
+            document.getElementById('sessionId').value = '';
+            document.getElementById('userName').value = '';
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (socket) {
+                socket.close();
             }
         });
     </script>

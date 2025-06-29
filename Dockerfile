@@ -1,13 +1,16 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Install git (required for some Go modules)
+# Install git (needed for go mod download)
 RUN apk add --no-cache git
 
 # Copy go mod files
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
 # Copy source code
@@ -19,11 +22,16 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o planning-poker .
 # Final stage
 FROM alpine:latest
 
+# Install ca-certificates for HTTPS requests
 RUN apk --no-cache add ca-certificates
+
+# Create app directory
 WORKDIR /root/
 
-# Copy the binary and web files
+# Copy the binary from builder stage
 COPY --from=builder /app/planning-poker .
+
+# Copy web assets
 COPY --from=builder /app/web ./web
 
 # Expose port 8080

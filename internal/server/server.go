@@ -4,86 +4,124 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/url"
-
-	"planning-poker/internal/poker"
+	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
+	"planning-poker/internal/poker"
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		return true // Allow all origins for development
 	},
 }
 
-type JoinMessage struct {
-	SessionID string `json:"sessionId"`
-	UserName  string `json:"userName"`
+type Server struct {
+	sessions map[string]*poker.Session
+	mu       sync.RWMutex
 }
 
-func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+func New() *Server {
+	return &Server{
+		sessions: make(map[string]*poker.Session),
+	}
+}
+
+func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Failed to upgrade connection: %v", err)
+		log.Printf("WebSocket upgrade failed: %v", err)
 		return
 	}
 	defer conn.Close()
 
-	var currentUser *poker.User
-	var currentSession *poker.Session
+	sessionID := r.URL.Query().Get("session")
+	userName := r.URL.Query().Get("user")
 
-	log.Println("Client connected")
+	if sessionID == "" || userName == "" {
+		log.Println("Missing session or user parameter")
+		return
+	}
 
+	s.mu.Lock()
+	session, exists := s.sessions[sessionID]
+	if !exists {
+		session = poker.NewSession(sessionID)
+		s.sessions[sessionID] = session
+	}
+	s.mu.Unlock()
+
+	// Add user to session
+	user := session.AddUser(userName, conn)
+	defer session.RemoveUser(user.ID)
+
+	log.Printf("User %s joined session %s", userName, sessionID)
+
+	// Handle messages from client
 	for {
-		messageType, message, err := conn.ReadMessage()
+		var msg poker.Message
+		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Printf("Error reading message: %v", err)
+			log.Printf("Read error: %v", err)
 			break
 		}
 
-		if messageType != websocket.TextMessage {
-			continue
-		}
-
-		// If user hasn't joined a session yet, expect a join message
-		if currentUser == nil {
-			var joinMsg JoinMessage
-			if err := json.Unmarshal(message, &joinMsg); err != nil {
-				log.Printf("Error parsing join message: %v", err)
-				continue
-			}
-
-			// Validate input
-			if joinMsg.SessionID == "" || joinMsg.UserName == "" {
-				log.Printf("Invalid join message: missing sessionId or userName")
-				continue
-			}
-
-			// URL decode the user name in case it came from URL parameters
-			decodedName, err := url.QueryUnescape(joinMsg.UserName)
-			if err != nil {
-				decodedName = joinMsg.UserName
-			}
-
-			currentSession = poker.GetSession(joinMsg.SessionID)
-			currentUser = currentSession.AddUser(decodedName, conn)
-
-			log.Printf("User %s joined session %s", currentUser.Name, currentSession.ID)
-			continue
-		}
-
-		// Handle poker-related messages
-		if currentSession != nil && currentUser != nil {
-			currentSession.HandleMessage(currentUser.ID, message)
-		}
+		session.HandleMessage(user.ID, msg)
 	}
+}
 
-	// Clean up when user disconnects
-	if currentSession != nil && currentUser != nil {
-		currentSession.RemoveUser(currentUser.ID)
-		log.Printf("User %s left session %s", currentUser.Name, currentSession.ID)
+func (s *Server) HandleSessions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	switch r.Method {
+	case "GET":
+		s.mu.RLock()
+		sessionList := make([]string, 0, len(s.sessions))
+		for id := range s.sessions {
+			sessionList = append(sessionList, id)
+		}
+		s.mu.RUnlock()
+		
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"sessions": sessionList,
+		})
+		
+	case "POST":
+		var req struct {
+			SessionID string `json:"sessionId"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+		
+		s.mu.Lock()
+		if _, exists := s.sessions[req.SessionID]; !exists {
+			s.sessions[req.SessionID] = poker.NewSession(req.SessionID)
+		}
+		s.mu.Unlock()
+		
+		json.NewEncoder(w).Encode(map[string]string{
+			"sessionId": req.SessionID,
+			"status":    "created",
+		})
 	}
+}
 
-	log.Println("Client disconnected")
+func (s *Server) HandleSession(w http.ResponseWriter, r *http.Request) {
+	// Extract session ID from URL path
+	sessionID := strings.TrimPrefix(r.URL.Path, "/api/sessions/")
+	
+	s.mu.RLock()
+	session, exists := s.sessions[sessionID]
+	s.mu.RUnlock()
+	
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(session.GetState())
 }
