@@ -1,0 +1,38 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Purpose and Scope}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}System Overview}{2}{subsection.1.2}%
+\contentsline {section}{\numberline {2}System Architecture}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}High-Level Architecture}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Technology Stack}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Package Structure}{3}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Session Management}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Session Lifecycle}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}User Roles}{3}{subsection.3.2}%
+\contentsline {section}{\numberline {4}WebSocket Message Protocol}{4}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Message Format}{4}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Client-to-Server Messages}{4}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Vote Submission}{4}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}Session Control}{5}{subsubsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.3}Server-to-Client Messages}{5}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Session State Broadcast}{5}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Waiting Room Notification}{6}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Session Start Notification}{6}{subsubsection.4.3.3}%
+\contentsline {subsubsection}{\numberline {4.3.4}User Presence Updates}{6}{subsubsection.4.3.4}%
+\contentsline {section}{\numberline {5}Security Considerations}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Authentication and Authorization}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Input Validation}{7}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Future Security Enhancements}{7}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Deployment and Operations}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Container Deployment}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}CI/CD Pipeline}{8}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Testing Strategy}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Test Coverage}{8}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Test Client}{8}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Performance Considerations}{9}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Scalability}{9}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Resource Usage}{9}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Future Enhancements}{9}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Planned Features}{9}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Architecture Evolution}{10}{subsection.9.2}%
+\contentsline {section}{\numberline {10}Conclusion}{10}{section.10}%

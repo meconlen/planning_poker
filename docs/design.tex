@@ -1,0 +1,586 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+
+% Page geometry
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=3cm,
+    bottom=3cm,
+    headheight=14pt
+}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Planning Poker System Design}
+\fancyhead[R]{v0.7.5}
+\fancyfoot[C]{\thepage}
+
+% Code listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single
+}
+
+\lstset{style=mystyle}
+
+% JSON style for message documentation
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{backcolour},
+    literate=
+     *{0}{{{\color{blue}0}}}{1}
+      {1}{{{\color{blue}1}}}{1}
+      {2}{{{\color{blue}2}}}{1}
+      {3}{{{\color{blue}3}}}{1}
+      {4}{{{\color{blue}4}}}{1}
+      {5}{{{\color{blue}5}}}{1}
+      {6}{{{\color{blue}6}}}{1}
+      {7}{{{\color{blue}7}}}{1}
+      {8}{{{\color{blue}8}}}{1}
+      {9}{{{\color{blue}9}}}{1}
+      {:}{{{\color{red}{:}}}}{1}
+      {,}{{{\color{red}{,}}}}{1}
+      {\{}{{{\color{red}{\{}}}}{1}
+      {\}}{{{\color{red}{\}}}}}{1}
+      {[}{{{\color{red}{[}}}}{1}
+      {]}{{{\color{red}{]}}}}{1},
+}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=green,
+    pdftitle={Planning Poker System Design},
+    pdfauthor={Mike Conlen},
+    pdfsubject={Real-time collaborative estimation system},
+    pdfkeywords={planning poker, websockets, go, real-time, scrum, agile}
+}
+
+% Title formatting
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\begin{document}
+
+% Title page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries Planning Poker System Design}
+    
+    \vspace{1cm}
+    {\Large Real-time Collaborative Estimation Platform}
+    
+    \vspace{2cm}
+    {\large\textbf{Author:} Mike Conlen}
+    
+    \vspace{1cm}
+    {\large\textbf{Version:} 0.7.5}
+    
+    \vspace{1cm}
+    {\large\textbf{Date:} \today}
+    
+    \vspace{3cm}
+    
+    \begin{abstract}
+    This document describes the architectural design and implementation of a real-time Planning Poker system built with Go and WebSockets. The system provides a collaborative platform for Agile development teams to perform story point estimation in distributed environments. This specification covers the system architecture, WebSocket message protocols, session management, and security considerations.
+    \end{abstract}
+    
+    \vfill
+    
+    {\small Planning Poker Project Documentation\\
+    \url{https://github.com/meconlen/planning_poker}}
+    
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Planning Poker is a consensus-based, gamified technique for estimating effort or relative size of development goals in software development \cite{grenning2002planning}. This system implements a real-time, web-based Planning Poker platform that enables distributed teams to collaborate effectively on story point estimation, following Agile methodologies \cite{schwaber2020scrum}.
+
+\subsection{Purpose and Scope}
+
+The Planning Poker system addresses the need for remote Agile teams to conduct estimation sessions with the same effectiveness as in-person meetings. The system provides:
+
+\begin{itemize}
+    \item Real-time collaborative estimation sessions
+    \item Moderator-controlled session flow
+    \item Standard Fibonacci voting scales
+    \item Session state persistence
+    \item Multi-user support with role-based permissions
+\end{itemize}
+
+\subsection{System Overview}
+
+The system follows a client-server architecture with WebSocket-based real-time communication \cite{rfc6455}. The server is implemented in Go \cite{golang2024}, leveraging the Gorilla WebSocket library \cite{gorilla2024} for efficient bidirectional communication. The client interface is a modern web application using vanilla JavaScript and WebSocket APIs.
+
+\section{System Architecture}
+
+\subsection{High-Level Architecture}
+
+The Planning Poker system employs a three-tier architecture:
+
+\begin{enumerate}
+    \item \textbf{Presentation Layer}: Web-based user interface
+    \item \textbf{Application Layer}: Go-based server with WebSocket handling
+    \item \textbf{Data Layer}: In-memory session management with future persistence options
+\end{enumerate}
+
+\subsection{Technology Stack}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Technology} \\
+\midrule
+Backend Language & Go 1.24+ \\
+WebSocket Library & Gorilla WebSocket v1.5.3 \\
+UUID Generation & Google UUID v1.6.0 \\
+Frontend & HTML5, CSS3, JavaScript (ES6+) \\
+Containerization & Docker \\
+CI/CD & GitHub Actions \\
+Documentation & \LaTeX \\
+\bottomrule
+\end{tabular}
+\caption{Technology Stack}
+\label{tab:tech-stack}
+\end{table}
+
+\subsection{Package Structure}
+
+The Go application follows clean architecture principles with clear separation of concerns:
+
+\begin{lstlisting}[language=bash, caption=Project Structure]
+planning-poker/
+|-- main.go                     # Application entry point
+|-- internal/
+|   |-- server/
+|   |   `-- server.go           # HTTP and WebSocket handlers
+|   `-- poker/
+|       |-- session.go          # Session management logic
+|       |-- session_test.go     # Unit tests
+|       `-- session_unit_test.go # Comprehensive test suite
+|-- web/
+|   `-- index.html              # Frontend application
+|-- test/
+|   `-- client.go               # Integration test client
+|-- scripts/
+|   |-- workflow.sh             # Development workflow
+|   |-- monitor-actions.sh      # CI/CD monitoring
+|   `-- check-actions.sh        # Status checking
+`-- docs/
+    |-- design.tex              # This document
+    |-- references.bib          # Bibliography
+    `-- Makefile                # Documentation build
+\end{lstlisting}
+
+\section{Session Management}
+
+\subsection{Session Lifecycle}
+
+Sessions progress through distinct states that control user interactions and system behavior:
+
+\begin{enumerate}
+    \item \textbf{Waiting}: Initial state where participants join but cannot vote
+    \item \textbf{Active}: Session is running and users can participate in voting
+    \item \textbf{Completed}: Session has ended (future enhancement)
+\end{enumerate}
+
+\subsection{User Roles}
+
+The system implements role-based access control with two primary roles:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{8cm}@{}}
+\toprule
+\textbf{Role} & \textbf{Permissions} \\
+\midrule
+Moderator & 
+\begin{minipage}[t]{8cm}
+\begin{itemize}
+    \item Start and control session flow
+    \item Reveal votes
+    \item Set story descriptions
+    \item Initiate new voting rounds
+    \item Manage session state
+\end{itemize}
+\end{minipage} \\
+\midrule
+Participant & 
+\begin{minipage}[t]{8cm}
+\begin{itemize}
+    \item Submit votes
+    \item View session state
+    \item Wait in waiting room until session starts
+    \item Receive real-time updates
+\end{itemize}
+\end{minipage} \\
+\bottomrule
+\end{tabular}
+\caption{User Roles and Permissions}
+\label{tab:user-roles}
+\end{table}
+
+\section{WebSocket Message Protocol}
+
+\subsection{Message Format}
+
+All WebSocket messages follow a standardized JSON format \cite{rfc7159} for consistency and ease of parsing:
+
+\begin{lstlisting}[language=json, caption=Base Message Format]
+{
+    "type": "message_type",
+    "data": {
+        // Message-specific payload
+    }
+}
+\end{lstlisting}
+
+\subsection{Client-to-Server Messages}
+
+\subsubsection{Vote Submission}
+
+Participants submit their estimates using the vote message:
+
+\begin{lstlisting}[language=json, caption=Vote Message]
+{
+    "type": "vote",
+    "data": {
+        "vote": "5"
+    }
+}
+\end{lstlisting}
+
+\textbf{Validation:} The vote value must be from the standard Fibonacci sequence: 0, 0.5, 1, 2, 3, 5, 8, 13, 21, ?, coffee
+
+\subsubsection{Session Control}
+
+Moderators control session flow with the following messages:
+
+\begin{lstlisting}[language=json, caption=Start Session Message]
+{
+    "type": "start_session"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption=Reveal Votes Message]
+{
+    "type": "reveal"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption=New Round Message]
+{
+    "type": "new_round"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption=Set Story Message]
+{
+    "type": "set_story",
+    "data": {
+        "story": "User story description"
+    }
+}
+\end{lstlisting}
+
+\subsection{Server-to-Client Messages}
+
+\subsubsection{Session State Broadcast}
+
+The server broadcasts complete session state to all connected clients:
+
+\begin{lstlisting}[language=json, caption=Session State Message]
+{
+    "type": "session_state",
+    "data": {
+        "status": "active",
+        "currentStory": "As a user, I want to...",
+        "votesRevealed": false,
+        "users": {
+            "user-uuid-1": {
+                "id": "user-uuid-1",
+                "name": "Alice",
+                "vote": "5",
+                "isModerator": true,
+                "isOnline": true
+            },
+            "user-uuid-2": {
+                "id": "user-uuid-2",
+                "name": "Bob",
+                "vote": null,
+                "isModerator": false,
+                "isOnline": true
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Waiting Room Notification}
+
+Non-moderator users receive waiting room notifications:
+
+\begin{lstlisting}[language=json, caption=Waiting Room Message]
+{
+    "type": "waiting_room",
+    "data": {
+        "message": "Waiting for moderator to start the session..."
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Session Start Notification}
+
+When a session begins, all participants receive:
+
+\begin{lstlisting}[language=json, caption=Session Start Message]
+{
+    "type": "start_session",
+    "data": {
+        "message": "Session has started! You can now participate in voting."
+    }
+}
+\end{lstlisting}
+
+\subsubsection{User Presence Updates}
+
+The system broadcasts user join/leave events:
+
+\begin{lstlisting}[language=json, caption=User Joined Message]
+{
+    "type": "user_joined",
+    "data": {
+        "userId": "user-uuid",
+        "userName": "Charlie"
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=json, caption=User Left Message]
+{
+    "type": "user_left",
+    "data": {
+        "userId": "user-uuid",
+        "userName": "Charlie"
+    }
+}
+\end{lstlisting}
+
+\section{Security Considerations}
+
+\subsection{Authentication and Authorization}
+
+Currently, the system uses session-based user identification with the following security measures:
+
+\begin{itemize}
+    \item UUID-based session and user identification
+    \item Role-based permission enforcement
+    \item Server-side validation of all user actions
+    \item Protection against unauthorized moderator actions
+\end{itemize}
+
+\subsection{Input Validation}
+
+All client inputs undergo server-side validation:
+
+\begin{itemize}
+    \item Vote values restricted to valid Fibonacci sequence
+    \item User names sanitized for display
+    \item Message types validated against known protocols
+    \item Session IDs validated for format and existence
+\end{itemize}
+
+\subsection{Future Security Enhancements}
+
+Planned security improvements include:
+
+\begin{itemize}
+    \item JWT-based authentication
+    \item Rate limiting for message frequency
+    \item HTTPS enforcement
+    \item Session timeout mechanisms
+    \item Audit logging
+\end{itemize}
+
+\section{Deployment and Operations}
+
+\subsection{Container Deployment}
+
+The system supports Docker-based deployment with multi-stage builds for optimization:
+
+\begin{lstlisting}[caption=Docker Configuration]
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o planning-poker
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/planning-poker .
+COPY web/ ./web/
+EXPOSE 8080
+CMD ["./planning-poker"]
+\end{lstlisting}
+
+\subsection{CI/CD Pipeline}
+
+The project employs GitHub Actions for continuous integration and deployment:
+
+\begin{itemize}
+    \item Automated testing on Go 1.24+
+    \item Static analysis with \texttt{go vet} and \texttt{staticcheck}
+    \item Docker image building and testing
+    \item Automated releases with semantic versioning
+\end{itemize}
+
+\section{Testing Strategy}
+
+\subsection{Test Coverage}
+
+The system implements comprehensive testing at multiple levels:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{8cm}@{}}
+\toprule
+\textbf{Test Type} & \textbf{Coverage} \\
+\midrule
+Unit Tests & Session management, user roles, voting logic \\
+Integration Tests & WebSocket message flows, client-server interaction \\
+End-to-End Tests & Complete user scenarios via test client \\
+\bottomrule
+\end{tabular}
+\caption{Testing Coverage}
+\label{tab:test-coverage}
+\end{table}
+
+\subsection{Test Client}
+
+A dedicated Go test client simulates browser behavior for integration testing:
+
+\begin{lstlisting}[language=go, caption=Test Client Usage]
+// Create test clients
+moderator := NewTestClient("Alice", sessionID, true)
+participant := NewTestClient("Bob", sessionID, false)
+
+// Connect and test workflow
+moderator.Connect(serverURL)
+participant.Connect(serverURL)
+moderator.StartSession()
+participant.Vote("5")
+\end{lstlisting}
+
+\section{Performance Considerations}
+
+\subsection{Scalability}
+
+Current design considerations for scalability:
+
+\begin{itemize}
+    \item In-memory session storage for low latency
+    \item Efficient WebSocket connection management
+    \item Minimal message overhead with JSON protocol
+    \item Stateless server design for horizontal scaling
+\end{itemize}
+
+\subsection{Resource Usage}
+
+Typical resource requirements:
+
+\begin{itemize}
+    \item Memory: ~10MB base + ~1KB per active user
+    \item CPU: Minimal when idle, spikes during message broadcasts
+    \item Network: ~1KB per message, scales with user count
+\end{itemize}
+
+\section{Future Enhancements}
+
+\subsection{Planned Features}
+
+\begin{itemize}
+    \item Persistent session storage (Redis/PostgreSQL)
+    \item Custom voting scales
+    \item Session analytics and reporting
+    \item Mobile-responsive design improvements
+    \item Integration with project management tools
+\end{itemize}
+
+\subsection{Architecture Evolution}
+
+Long-term architectural considerations:
+
+\begin{itemize}
+    \item Microservices decomposition
+    \item Event-driven architecture with message queues
+    \item Multi-region deployment support
+    \item Real-time analytics dashboard
+\end{itemize}
+
+\section{Conclusion}
+
+The Planning Poker system successfully implements a robust, real-time collaborative estimation platform suitable for distributed Agile teams. The WebSocket-based architecture provides low-latency communication while maintaining simplicity and reliability.
+
+The system's modular design and comprehensive testing strategy ensure maintainability and extensibility for future enhancements. The documented message protocols and security considerations provide a solid foundation for integration and deployment in production environments.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
