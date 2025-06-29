@@ -53,8 +53,8 @@ type Session struct {
 	CurrentStory  string           `json:"currentStory"`
 	VotesRevealed bool             `json:"votesRevealed"`
 	ModeratorID   string           `json:"moderatorId"`
-	CreatorID     string           `json:"creatorId"`     // Who created the session
-	Status        SessionStatus    `json:"status"`       // Session status
+	CreatorID     string           `json:"creatorId"` // Who created the session
+	Status        SessionStatus    `json:"status"`    // Session status
 	CreatedAt     time.Time        `json:"createdAt"`
 	mu            sync.RWMutex     `json:"-"`
 }
@@ -106,7 +106,7 @@ func (s *Session) AddUser(name string, conn *websocket.Conn, isCreator bool) *Us
 			}),
 		})
 	}
-	
+
 	// Always send session state so users know about other participants
 	user.sendMessage(Message{
 		Type: MessageTypeSessionState,
@@ -210,7 +210,7 @@ func (s *Session) HandleMessage(userID string, msg Message) {
 			log.Printf("User %s attempted to start session but is not creator", user.Name)
 			return
 		}
-		
+
 		if !s.startSessionUnsafe(userID) {
 			log.Printf("Failed to start session for user %s", user.Name)
 		}
@@ -293,7 +293,7 @@ func (s *Session) SetCreator(userID string) {
 
 	s.CreatorID = userID
 	s.ModeratorID = userID
-	
+
 	// Make the creator the moderator
 	if user, exists := s.Users[userID]; exists {
 		user.IsModerator = true

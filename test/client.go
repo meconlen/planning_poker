@@ -18,12 +18,12 @@ type TestMessage struct {
 }
 
 type TestClient struct {
-	name        string
-	sessionID   string
-	isCreator   bool
-	conn        *websocket.Conn
-	messages    []TestMessage
-	done        chan struct{}
+	name      string
+	sessionID string
+	isCreator bool
+	conn      *websocket.Conn
+	messages  []TestMessage
+	done      chan struct{}
 }
 
 func NewTestClient(name, sessionID string, isCreator bool) *TestClient {
@@ -75,7 +75,7 @@ func (c *TestClient) readMessages() {
 
 func (c *TestClient) logMessage(msg TestMessage) {
 	log.Printf("[%s] Received: %s", c.name, msg.Type)
-	
+
 	switch msg.Type {
 	case "session_state":
 		var state map[string]interface{}

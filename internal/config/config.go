@@ -10,57 +10,57 @@ import (
 // Config holds the application configuration
 type Config struct {
 	// Server configuration
-	Port              string        `json:"port"`
-	Host              string        `json:"host"`
-	ReadTimeout       time.Duration `json:"readTimeout"`
-	WriteTimeout      time.Duration `json:"writeTimeout"`
-	IdleTimeout       time.Duration `json:"idleTimeout"`
-	ShutdownTimeout   time.Duration `json:"shutdownTimeout"`
-	
+	Port            string        `json:"port"`
+	Host            string        `json:"host"`
+	ReadTimeout     time.Duration `json:"readTimeout"`
+	WriteTimeout    time.Duration `json:"writeTimeout"`
+	IdleTimeout     time.Duration `json:"idleTimeout"`
+	ShutdownTimeout time.Duration `json:"shutdownTimeout"`
+
 	// WebSocket configuration
-	AllowedOrigins    []string `json:"allowedOrigins"`
-	MaxMessageSize    int64    `json:"maxMessageSize"`
-	
+	AllowedOrigins []string `json:"allowedOrigins"`
+	MaxMessageSize int64    `json:"maxMessageSize"`
+
 	// Session configuration
-	SessionTimeout    time.Duration `json:"sessionTimeout"`
-	MaxSessionsPerUser int          `json:"maxSessionsPerUser"`
-	
+	SessionTimeout     time.Duration `json:"sessionTimeout"`
+	MaxSessionsPerUser int           `json:"maxSessionsPerUser"`
+
 	// Logging configuration
-	LogLevel         string `json:"logLevel"`
-	LogFormat        string `json:"logFormat"`
-	
+	LogLevel  string `json:"logLevel"`
+	LogFormat string `json:"logFormat"`
+
 	// Development settings
-	IsDevelopment    bool `json:"isDevelopment"`
-	EnablePprof      bool `json:"enablePprof"`
+	IsDevelopment bool `json:"isDevelopment"`
+	EnablePprof   bool `json:"enablePprof"`
 }
 
 // Load loads configuration from environment variables with defaults
 func Load() *Config {
 	config := &Config{
 		// Default values
-		Port:              getEnv("PORT", "8080"),
-		Host:              getEnv("HOST", ""),
-		ReadTimeout:       getDurationEnv("READ_TIMEOUT", 15*time.Second),
-		WriteTimeout:      getDurationEnv("WRITE_TIMEOUT", 15*time.Second),
-		IdleTimeout:       getDurationEnv("IDLE_TIMEOUT", 60*time.Second),
-		ShutdownTimeout:   getDurationEnv("SHUTDOWN_TIMEOUT", 10*time.Second),
-		AllowedOrigins:    getStringSliceEnv("ALLOWED_ORIGINS", []string{"*"}),
-		MaxMessageSize:    getInt64Env("MAX_MESSAGE_SIZE", 1024),
-		SessionTimeout:    getDurationEnv("SESSION_TIMEOUT", 24*time.Hour),
+		Port:               getEnv("PORT", "8080"),
+		Host:               getEnv("HOST", ""),
+		ReadTimeout:        getDurationEnv("READ_TIMEOUT", 15*time.Second),
+		WriteTimeout:       getDurationEnv("WRITE_TIMEOUT", 15*time.Second),
+		IdleTimeout:        getDurationEnv("IDLE_TIMEOUT", 60*time.Second),
+		ShutdownTimeout:    getDurationEnv("SHUTDOWN_TIMEOUT", 10*time.Second),
+		AllowedOrigins:     getStringSliceEnv("ALLOWED_ORIGINS", []string{"*"}),
+		MaxMessageSize:     getInt64Env("MAX_MESSAGE_SIZE", 1024),
+		SessionTimeout:     getDurationEnv("SESSION_TIMEOUT", 24*time.Hour),
 		MaxSessionsPerUser: getIntEnv("MAX_SESSIONS_PER_USER", 10),
-		LogLevel:          getEnv("LOG_LEVEL", "info"),
-		LogFormat:         getEnv("LOG_FORMAT", "text"),
-		IsDevelopment:     getBoolEnv("DEVELOPMENT", false),
-		EnablePprof:       getBoolEnv("ENABLE_PPROF", false),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		LogFormat:          getEnv("LOG_FORMAT", "text"),
+		IsDevelopment:      getBoolEnv("DEVELOPMENT", false),
+		EnablePprof:        getBoolEnv("ENABLE_PPROF", false),
 	}
-	
+
 	// In development mode, be more permissive
 	if config.IsDevelopment {
 		config.AllowedOrigins = []string{"*"}
 		config.LogLevel = "debug"
 		config.EnablePprof = true
 	}
-	
+
 	return config
 }
 
