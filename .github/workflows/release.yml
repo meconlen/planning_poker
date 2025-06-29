@@ -1,0 +1,223 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Get tag name
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        run: |
+          # Build for multiple platforms
+          mkdir -p dist
+          
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -o dist/planning-poker-linux-amd64 .
+          
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -o dist/planning-poker-linux-arm64 .
+          
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -o dist/planning-poker-darwin-amd64 .
+          
+          # macOS ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -o dist/planning-poker-darwin-arm64 .
+          
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -o dist/planning-poker-windows-amd64.exe .
+
+      - name: Create release archives
+        run: |
+          cd dist
+          
+          # Create tar.gz for Unix systems
+          tar -czf planning-poker-linux-amd64.tar.gz planning-poker-linux-amd64
+          tar -czf planning-poker-linux-arm64.tar.gz planning-poker-linux-arm64
+          tar -czf planning-poker-darwin-amd64.tar.gz planning-poker-darwin-amd64
+          tar -czf planning-poker-darwin-arm64.tar.gz planning-poker-darwin-arm64
+          
+          # Create zip for Windows
+          zip planning-poker-windows-amd64.zip planning-poker-windows-amd64.exe
+
+      - name: Build Docker image
+        run: |
+          docker build -t planning-poker:${{ steps.tag.outputs.tag }} .
+          docker save planning-poker:${{ steps.tag.outputs.tag }} | gzip > dist/planning-poker-docker-${{ steps.tag.outputs.tag }}.tar.gz
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          # Generate release notes based on version
+          case $VERSION in
+            0.1.0)
+              cat > release_notes.md << 'EOF'
+          ## 🎉 Initial Release - Basic WebSocket Server
+          
+          First release of Planning Poker with basic functionality:
+          
+          ### ✨ Features
+          - Basic HTTP server serving static files
+          - WebSocket endpoint for real-time communication
+          - Simple echo functionality for testing
+          - Foundation HTML/CSS/JS frontend
+          
+          ### 🚀 Getting Started
+          1. Download the binary for your platform
+          2. Run `./planning-poker` (or `planning-poker.exe` on Windows)
+          3. Open http://localhost:8080 in your browser
+          
+          ### 🐳 Docker
+          ```bash
+          docker run -p 8080:8080 planning-poker:v0.1.0
+          ```
+          EOF
+              ;;
+            0.2.0)
+              cat > release_notes.md << 'EOF'
+          ## 🃏 Planning Poker Functionality
+          
+          This release introduces core planning poker features:
+          
+          ### ✨ New Features
+          - Session management with User and Session structs
+          - Real-time voting with Fibonacci sequence cards (0,1,2,3,5,8,13,21,?)
+          - Vote reveal and new round functionality
+          - Story setting for estimation rounds
+          - Multi-user sessions with real-time state synchronization
+          - Structured codebase with internal/poker and internal/server packages
+          
+          ### 🎯 How to Use
+          1. Enter a session ID and your name
+          2. Set the current story being estimated
+          3. Cast your vote using the card values
+          4. Reveal votes to see everyone's estimates
+          5. Start a new round for the next story
+          EOF
+              ;;
+            0.3.0)
+              cat > release_notes.md << 'EOF'
+          ## 🐳 Docker Containerization
+          
+          Production-ready containerization and development workflow:
+          
+          ### ✨ New Features
+          - Multi-stage Dockerfile for efficient builds
+          - Docker Compose setup for easy development
+          - Makefile with convenient commands (`make dev`, `make down`, etc.)
+          - Production-ready containerization with Alpine Linux
+          - Port configuration via environment variables
+          
+          ### 🚀 Quick Start with Docker
+          ```bash
+          # Using Docker Compose
+          make dev
+          
+          # Or using Docker directly
+          docker run -p 8080:8080 planning-poker:v0.3.0
+          ```
+          
+          ### 📝 Available Commands
+          - `make dev` - Start development environment
+          - `make down` - Stop all services
+          - `make logs` - View application logs
+          - `make clean` - Clean up Docker resources
+          EOF
+              ;;
+            0.7.0)
+              cat > release_notes.md << 'EOF'
+          ## 🎉 Complete Planning Poker Application
+          
+          Full-featured planning poker application ready for production use!
+          
+          ### ✨ Key Features
+          - **Moderator System**: First user becomes moderator with special privileges
+          - **Session Creation**: Generate random session IDs with shareable URLs
+          - **Real-time Voting**: WebSocket-based instant updates
+          - **Modern UI**: Beautiful gradient design with responsive layout
+          - **Easy Sharing**: Copy session URLs to invite team members
+          - **URL Joining**: Join sessions directly from shared URLs
+          - **Docker Ready**: Complete containerization for easy deployment
+          
+          ### 🎯 Perfect For
+          - Agile teams doing story point estimation
+          - Remote planning poker sessions
+          - Scrum planning meetings
+          - Team estimation exercises
+          
+          ### 🚀 Quick Start
+          ```bash
+          # Run with Docker
+          docker run -p 8080:8080 planning-poker:v0.7.0
+          
+          # Or with Docker Compose
+          curl -O https://raw.githubusercontent.com/meconlen/planning_poker/v0.7.0/docker-compose.yml
+          docker-compose up
+          ```
+          
+          ### 🌟 What's New in v0.7.0
+          - Complete moderator workflow implementation
+          - Session sharing with copy-to-clipboard functionality
+          - Enhanced error handling and validation
+          - Production deployment scripts
+          - Comprehensive documentation
+          
+          ### 🔧 Technical Improvements
+          - Thread-safe session management
+          - Optimized WebSocket handling
+          - Better connection management
+          - Improved Docker build process
+          EOF
+              ;;
+            *)
+              cat > release_notes.md << 'EOF'
+          ## Planning Poker Release
+          
+          New release of Planning Poker with improvements and bug fixes.
+          
+          See the commit history for detailed changes.
+          EOF
+              ;;
+          esac
+          
+          echo "release_notes_file=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Planning Poker ${{ steps.tag.outputs.tag }}
+          body_path: ${{ steps.release_notes.outputs.release_notes_file }}
+          files: |
+            dist/planning-poker-linux-amd64.tar.gz
+            dist/planning-poker-linux-arm64.tar.gz
+            dist/planning-poker-darwin-amd64.tar.gz
+            dist/planning-poker-darwin-arm64.tar.gz
+            dist/planning-poker-windows-amd64.zip
+            dist/planning-poker-docker-${{ steps.tag.outputs.tag }}.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
