@@ -33,3 +33,19 @@ pids
 # Environment variables
 .env
 .env.local
+
+# Terraform
+infrastructure/terraform/terraform.tfstate
+infrastructure/terraform/terraform.tfstate.backup
+infrastructure/terraform/.terraform/
+infrastructure/terraform/.terraform.lock.hcl
+infrastructure/terraform/terraform.tfvars
+
+# Packer
+infrastructure/packer/manifest.json
+infrastructure/packer/packer_cache/
+
+# Infrastructure secrets and temp files
+*.pem
+*.key
+!*.pub

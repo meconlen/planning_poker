@@ -1,0 +1,64 @@
+name: Infrastructure Validation
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'infrastructure/**'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'infrastructure/**'
+
+jobs:
+  validate-packer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@main
+      with:
+        version: 'latest'
+
+    - name: Validate Packer configuration
+      run: |
+        cd infrastructure/packer
+        packer validate planning-poker.pkr.hcl
+
+  validate-terraform:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 'latest'
+
+    - name: Terraform Format Check
+      run: |
+        cd infrastructure/terraform
+        terraform fmt -check
+
+    - name: Terraform Init
+      run: |
+        cd infrastructure/terraform
+        terraform init
+
+    - name: Terraform Validate
+      run: |
+        cd infrastructure/terraform
+        terraform validate
+
+  lint-scripts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install shellcheck
+      run: sudo apt-get install -y shellcheck
+
+    - name: Lint shell scripts
+      run: |
+        find infrastructure -name "*.sh" -type f -exec shellcheck {} \;
