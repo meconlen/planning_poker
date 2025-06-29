@@ -29,7 +29,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{Planning Poker System Design}
-\fancyhead[R]{v0.7.5}
+\fancyhead[R]{v0.8.2}
 \fancyfoot[C]{\thepage}
 
 % Code listing style
@@ -549,6 +549,309 @@ Typical resource requirements:
     \item Memory: ~10MB base + ~1KB per active user
     \item CPU: Minimal when idle, spikes during message broadcasts
     \item Network: ~1KB per message, scales with user count
+\end{itemize}
+
+\section{Infrastructure as Code}
+
+\subsection{Overview}
+
+The Planning Poker system includes comprehensive Infrastructure as Code (IaC) for automated deployment to Linode cloud infrastructure. The IaC implementation uses HashiCorp Packer for image building and Terraform for infrastructure provisioning, providing a fully automated path from source code to production deployment.
+
+\subsection{Architecture Components}
+
+The infrastructure deployment consists of two main components working in sequence:
+
+\begin{enumerate}
+    \item \textbf{Packer Image Builder}: Creates custom Linode images with Docker and deployment automation pre-installed
+    \item \textbf{Terraform Infrastructure Provisioner}: Deploys the Packer image and configures networking, security, and application startup
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language=bash, caption=Infrastructure Deployment Flow]
+# Step 1: Build custom image with Packer
+Packer -> Ubuntu 22.04 Base Image
+       -> Install Docker + Dependencies
+       -> Copy Deployment Scripts
+       -> Configure Systemd Service
+       -> Create Custom Image
+
+# Step 2: Deploy infrastructure with Terraform
+Terraform -> Provision Linode Instance (Custom Image)
+          -> Configure Firewall Rules
+          -> Setup Networking
+          -> Start Application Service
+          -> Output Access Information
+\end{lstlisting}
+\end{figure}
+
+\subsection{Packer Configuration}
+
+\subsubsection{Base Image and Provisioning}
+
+The Packer configuration builds upon Ubuntu 22.04 LTS, installing essential components for containerized application deployment:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Purpose} \\
+\midrule
+Docker CE & Container runtime for application deployment \\
+Docker Compose & Multi-container application orchestration \\
+GitHub CLI & Automated release artifact downloading \\
+System Tools & htop, curl, wget, unzip, jq for administration \\
+Deployment Script & Automated application startup and management \\
+Systemd Service & System-level service management \\
+\bottomrule
+\end{tabular}
+\caption{Packer Image Components}
+\label{tab:packer-components}
+\end{table}
+
+\subsubsection{Deployment Automation}
+
+The Packer image includes a deployment script (\texttt{/opt/planning-poker/deploy.sh}) that:
+
+\begin{itemize}
+    \item Fetches the latest release tag from GitHub API
+    \item Downloads the Docker image from GitHub releases
+    \item Loads the Docker image and starts the container
+    \item Configures automatic restart policies
+    \item Performs health checks and logging
+\end{itemize}
+
+\subsubsection{Service Configuration}
+
+A systemd service (\texttt{planning-poker.service}) provides:
+
+\begin{itemize}
+    \item Automatic startup on system boot
+    \item Dependency management (requires Docker service)
+    \item Centralized logging via journald
+    \item Service lifecycle management
+\end{itemize}
+
+\subsection{Terraform Configuration}
+
+\subsubsection{Infrastructure Resources}
+
+The Terraform configuration provisions the following Linode resources:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Resource} & \textbf{Configuration} & \textbf{Purpose} \\
+\midrule
+Linode Instance & g6-nanode-1 (1GB RAM) & Application hosting \\
+Cloud Firewall & SSH, HTTP, HTTPS, App ports & Network security \\
+Domain Records & A and CNAME (optional) & DNS management \\
+SSH Key & Public key authentication & Secure access \\
+\bottomrule
+\end{tabular}
+\caption{Terraform Infrastructure Resources}
+\label{tab:terraform-resources}
+\end{table}
+
+\subsubsection{Security Configuration}
+
+The firewall configuration implements defense-in-depth principles:
+
+\begin{lstlisting}[language=bash, caption=Firewall Rules Configuration]
+# Inbound Rules (ACCEPT)
+- SSH (port 22): Administrative access
+- HTTP (port 80): Web traffic (redirect to HTTPS)
+- HTTPS (port 443): Secure web traffic
+- Application (port 8080): Planning Poker access
+
+# Outbound Policy: ACCEPT (all outbound traffic allowed)
+# Inbound Policy: DROP (default deny, explicit allow only)
+\end{lstlisting}
+
+\subsection{Prerequisites and Setup}
+
+\subsubsection{Required Tools and Accounts}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Requirement} & \textbf{Version} & \textbf{Purpose} \\
+\midrule
+Linode Account & Active with API access & Cloud infrastructure provider \\
+Linode API Token & Full read/write permissions & Infrastructure provisioning \\
+Packer & 1.9.0+ & Image building \\
+Terraform & 1.5.0+ & Infrastructure provisioning \\
+SSH Key Pair & RSA or Ed25519 & Server authentication \\
+\bottomrule
+\end{tabular}
+\caption{Infrastructure Prerequisites}
+\label{tab:infra-prerequisites}
+\end{table}
+
+\subsubsection{Linode API Token Configuration}
+
+The Linode API token must have the following permissions:
+
+\begin{itemize}
+    \item \textbf{Linodes}: Read/Write (instance management)
+    \item \textbf{Images}: Read/Write (custom image creation)
+    \item \textbf{Domains}: Read/Write (DNS management, optional)
+    \item \textbf{Firewall}: Read/Write (security rule management)
+\end{itemize}
+
+Generate the token at: \url{https://cloud.linode.com/profile/tokens}
+
+\subsubsection{Environment Setup}
+
+\begin{lstlisting}[language=bash, caption=Environment Configuration]
+# Export Linode API token
+export LINODE_TOKEN="your-linode-api-token-here"
+
+# Configure Terraform variables
+cd infrastructure/terraform
+cp terraform.tfvars.example terraform.tfvars
+
+# Edit terraform.tfvars with:
+# - linode_token: Your API token
+# - root_password: Secure server password
+# - ssh_public_key: Your public SSH key content
+# - planning_poker_image: Packer image name
+\end{lstlisting}
+
+\subsection{Deployment Process}
+
+\subsubsection{One-Command Deployment}
+
+The infrastructure includes a Makefile for simplified operations:
+
+\begin{lstlisting}[language=bash, caption=Automated Deployment]
+# Complete deployment (Packer + Terraform)
+cd infrastructure
+make deploy
+
+# Individual steps
+make packer-build      # Build custom image
+make terraform-apply   # Deploy infrastructure
+
+# Management commands
+make status            # Check application status
+make show              # Display Terraform outputs
+\end{lstlisting}
+
+\subsubsection{Manual Deployment Steps}
+
+For detailed control or troubleshooting:
+
+\begin{lstlisting}[language=bash, caption=Manual Deployment Process]
+# Step 1: Build Packer image
+cd infrastructure/packer
+packer validate planning-poker.pkr.hcl
+packer build planning-poker.pkr.hcl
+
+# Step 2: Configure Terraform
+cd ../terraform
+terraform init
+terraform plan
+
+# Step 3: Deploy infrastructure
+terraform apply
+
+# Step 4: Verify deployment
+terraform output planning_poker_url
+curl -I $(terraform output -raw planning_poker_url)
+\end{lstlisting}
+
+\subsection{Cost Analysis}
+
+\subsubsection{Linode Pricing Structure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+\textbf{Instance Type} & \textbf{RAM} & \textbf{CPU} & \textbf{Storage} & \textbf{Monthly Cost} \\
+\midrule
+g6-nanode-1 & 1GB & 1 vCPU & 25GB & \$5.00 \\
+g6-standard-1 & 2GB & 1 vCPU & 50GB & \$10.00 \\
+g6-standard-2 & 4GB & 2 vCPU & 80GB & \$20.00 \\
+\bottomrule
+\end{tabular}
+\caption{Linode Instance Pricing (as of 2025)}
+\label{tab:linode-pricing}
+\end{table}
+
+The default \texttt{g6-nanode-1} instance provides sufficient resources for small to medium Planning Poker sessions (10-50 concurrent users).
+
+\subsubsection{Additional Costs}
+
+\begin{itemize}
+    \item \textbf{Bandwidth}: 1TB included, \$0.01/GB overage
+    \item \textbf{Backups}: \$1.00/month (20\% of instance cost)
+    \item \textbf{DNS}: \$0.00 (included with domain management)
+    \item \textbf{Firewall}: \$0.00 (included service)
+\end{itemize}
+
+\subsection{Monitoring and Management}
+
+\subsubsection{Application Health Monitoring}
+
+\begin{lstlisting}[language=bash, caption=Health Check Commands]
+# Application availability
+curl -I http://instance-ip:8080
+
+# Container status
+ssh root@instance-ip 'docker ps'
+
+# Service logs
+ssh root@instance-ip 'journalctl -u planning-poker -f'
+
+# System resources
+ssh root@instance-ip 'htop'
+\end{lstlisting}
+
+\subsubsection{Update Management}
+
+Application updates are automated through the deployment script:
+
+\begin{lstlisting}[language=bash, caption=Update Process]
+# Automatic update (fetches latest GitHub release)
+ssh root@instance-ip 'systemctl restart planning-poker'
+
+# Manual update to specific version
+ssh root@instance-ip
+# Edit /opt/planning-poker/deploy.sh to specify version
+systemctl restart planning-poker
+\end{lstlisting}
+
+\subsection{Security Considerations}
+
+\subsubsection{Network Security}
+
+\begin{itemize}
+    \item Firewall-based access control with minimal port exposure
+    \item SSH key-based authentication (password authentication disabled)
+    \item Regular security updates via automated package management
+    \item Network isolation through Linode's private networking
+\end{itemize}
+
+\subsubsection{Application Security}
+
+\begin{itemize}
+    \item Container isolation through Docker
+    \item Non-root container execution
+    \item Automated security updates for base image
+    \item Regular image rebuilds with latest security patches
+\end{itemize}
+
+\subsubsection{Access Control}
+
+\begin{itemize}
+    \item SSH access restricted to authorized public keys
+    \item Root access protected by strong password + SSH keys
+    \item Application runs in unprivileged container context
+    \item Firewall rules limit attack surface
 \end{itemize}
 
 \section{Future Enhancements}
