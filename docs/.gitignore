@@ -9,5 +9,5 @@
 *.fls
 *.synctex.gz
 
-# Keep the final PDF for now
-# design.pdf
+# Don't track the PDF - it's generated during releases
+design.pdf

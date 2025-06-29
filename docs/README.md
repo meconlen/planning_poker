@@ -9,9 +9,31 @@ This directory contains the LaTeX-based technical documentation for the Planning
 - **`Makefile`** - Build system for generating PDF documentation
 - **`README.md`** - This documentation guide
 
-## 🔧 Prerequisites
+## � Automated Documentation Build
 
-To build the documentation, you need a LaTeX distribution installed:
+The PDF documentation is automatically built and distributed during the release process:
+
+1. **CI/CD Integration**: Documentation builds automatically when version tags are pushed
+2. **Release Artifacts**: Generated PDF is attached to GitHub releases
+3. **No Git Tracking**: PDF files are excluded from git to avoid binary bloat
+
+### Creating a Release with Documentation
+```bash
+# Tag a new version
+git tag v1.0.0
+git push origin v1.0.0
+
+# GitHub Actions will automatically:
+# - Build the documentation
+# - Create release binaries for multiple platforms  
+# - Attach the PDF to the release
+```
+
+## 🔧 Local Development
+
+### Prerequisites
+
+To build the documentation locally, you need a LaTeX distribution installed:
 
 ### macOS
 ```bash

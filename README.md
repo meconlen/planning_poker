@@ -302,6 +302,37 @@ gh release list
 gh release view <tag>
 ```
 
+## Creating Releases
+
+The project uses automated releases with comprehensive artifacts:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The GitHub Actions workflow will automatically:
+- ✅ Run all tests and quality checks
+- ✅ Build documentation PDF from LaTeX sources
+- ✅ Create binaries for multiple platforms (Linux, macOS, Windows)
+- ✅ Create a GitHub release with all artifacts attached
+
+**Release Artifacts Include**:
+- `planning-poker-linux-amd64` - Linux binary
+- `planning-poker-darwin-amd64` - macOS Intel binary  
+- `planning-poker-darwin-arm64` - macOS Apple Silicon binary
+- `planning-poker-windows-amd64.exe` - Windows binary
+- `design.pdf` - Complete system design documentation
+
+### Automated Documentation
+
+The technical documentation is built automatically:
+- **Source**: LaTeX files in `/docs` directory
+- **Build**: Automatic during release process
+- **Distribution**: PDF attached to GitHub releases
+- **Benefits**: No binary files in git, always up-to-date documentation
+
 ## Contributing
 
 We follow a structured development workflow to maintain code quality. Please read our [Contributing Guide](CONTRIBUTING.md) for detailed information.
