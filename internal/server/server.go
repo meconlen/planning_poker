@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"planning-poker/internal/config"
 	"planning-poker/internal/poker"
 
 	"github.com/gorilla/websocket"
@@ -20,6 +21,7 @@ var upgrader = websocket.Upgrader{
 
 type Server struct {
 	sessions map[string]*poker.Session
+	config   *config.Config
 	mu       sync.RWMutex
 }
 
@@ -27,6 +29,32 @@ func New() *Server {
 	return &Server{
 		sessions: make(map[string]*poker.Session),
 	}
+}
+
+func NewWithConfig(cfg *config.Config) *Server {
+	server := &Server{
+		sessions: make(map[string]*poker.Session),
+		config:   cfg,
+	}
+
+	// Configure WebSocket upgrader based on configuration
+	if cfg != nil && cfg.IsProductionMode() {
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			for _, allowedOrigin := range cfg.AllowedOrigins {
+				if allowedOrigin == "*" || allowedOrigin == origin {
+					return true
+				}
+			}
+			return false
+		}
+
+		// Set message size limit
+		upgrader.ReadBufferSize = int(cfg.MaxMessageSize)
+		upgrader.WriteBufferSize = int(cfg.MaxMessageSize)
+	}
+
+	return server
 }
 
 func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +84,7 @@ func (s *Server) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// Add user to session
 	user := session.AddUser(userName, conn, isCreator)
-	
+
 	defer session.RemoveUser(user.ID)
 
 	log.Printf("User %s joined session %s (creator: %v)", userName, sessionID, isCreator)
@@ -109,6 +137,9 @@ func (s *Server) HandleSessions(w http.ResponseWriter, r *http.Request) {
 			"sessionId": req.SessionID,
 			"status":    "created",
 		})
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
