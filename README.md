@@ -262,8 +262,41 @@ gh release view <tag>
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test the application
-5. Submit a pull request
+We follow a structured development workflow to maintain code quality. Please read our [Contributing Guide](CONTRIBUTING.md) for detailed information.
+
+### Quick Start for Contributors
+
+1. **Clone and setup**:
+   ```bash
+   git clone https://github.com/meconlen/planning_poker.git
+   cd planning_poker
+   git checkout dev  # Always work on dev branch
+   ```
+
+2. **Make changes on dev branch**:
+   ```bash
+   # Make your changes
+   go test ./...     # Run tests
+   go build          # Verify build
+   ```
+
+3. **Commit and push**:
+   ```bash
+   git add .
+   git commit -m "feat: Your feature description"
+   git push origin dev
+   ```
+
+### Development Workflow
+
+- **`dev`** - Main development branch (work here)
+- **`main`** - Production-ready code only (merge from dev when stable)
+- **Releases** - Tagged from main after thorough testing
+
+### Key Rules
+- ✅ All development happens on `dev` branch
+- ✅ All tests must pass before merging to `main`
+- ✅ `main` branch is protected and stable
+- ✅ Releases are tagged from `main` only
+
+For detailed workflow, testing requirements, and code standards, see [CONTRIBUTING.md](CONTRIBUTING.md).
