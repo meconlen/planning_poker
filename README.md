@@ -130,10 +130,52 @@ To add new features or modify the application:
 
 ## Configuration
 
-The server runs on port 8080 by default. To change this, modify the port in `main.go`:
+The application supports extensive configuration through environment variables:
 
-```go
-log.Fatal(http.ListenAndServe(":8080", nil))
+### Server Configuration
+- `PORT` - Server port (default: 8080)
+- `HOST` - Server host (default: "")
+- `READ_TIMEOUT` - Request read timeout (default: 15s)
+- `WRITE_TIMEOUT` - Response write timeout (default: 15s)
+- `IDLE_TIMEOUT` - Connection idle timeout (default: 60s)
+- `SHUTDOWN_TIMEOUT` - Graceful shutdown timeout (default: 10s)
+
+### Security Configuration
+- `ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins (default: "*")
+- `MAX_MESSAGE_SIZE` - Maximum WebSocket message size in bytes (default: 1024)
+
+### Session Configuration
+- `SESSION_TIMEOUT` - Session lifetime (default: 24h)
+- `MAX_SESSIONS_PER_USER` - Maximum sessions per user (default: 10)
+
+### Logging Configuration
+- `LOG_LEVEL` - Log level: debug, info, warn, error (default: info)
+- `LOG_FORMAT` - Log format: text, json (default: text)
+
+### Development Configuration
+- `DEVELOPMENT` - Enable development mode (default: false)
+- `ENABLE_PPROF` - Enable pprof endpoints (default: false)
+
+### Example Configuration
+```bash
+# Production configuration
+export PORT=8080
+export HOST=0.0.0.0
+export ALLOWED_ORIGINS="https://yourapp.com,https://api.yourapp.com"
+export LOG_LEVEL=warn
+export DEVELOPMENT=false
+
+# Development configuration
+export PORT=3000
+export DEVELOPMENT=true
+export LOG_LEVEL=debug
+```
+
+### Health Check
+The server provides a health check endpoint at `/health`:
+```bash
+curl http://localhost:8080/health
+# Response: {"status":"ok","service":"planning-poker"}
 ```
 
 ## Docker Commands
