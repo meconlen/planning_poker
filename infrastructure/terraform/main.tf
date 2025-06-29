@@ -72,7 +72,7 @@ data "linode_images" "planning_poker" {
 # Create Linode instance
 resource "linode_instance" "planning_poker" {
   label           = var.instance_label
-  image           = data.linode_images.planning_poker.images[0].id
+  image           = length(data.linode_images.planning_poker.images) > 0 ? data.linode_images.planning_poker.images[0].id : var.planning_poker_image
   region          = var.region
   type            = var.instance_type
   root_pass       = var.root_password
@@ -85,7 +85,7 @@ resource "linode_instance" "planning_poker" {
   # Ensure the instance is ready before proceeding
   connection {
     type        = "ssh"
-    host        = self.ip_address
+    host        = tolist(self.ipv4)[0]
     user        = "root"
     private_key = file("~/.ssh/id_rsa")  # Adjust path as needed
     timeout     = "5m"
@@ -167,7 +167,7 @@ resource "linode_domain_record" "planning_poker_a" {
   domain_id = linode_domain.planning_poker[0].id
   name      = "@"
   record_type = "A"
-  target    = linode_instance.planning_poker.ip_address
+  target    = tolist(linode_instance.planning_poker.ipv4)[0]
   ttl_sec   = 300
 }
 
@@ -176,7 +176,7 @@ resource "linode_domain_record" "planning_poker_www" {
   domain_id = linode_domain.planning_poker[0].id
   name      = "www"
   record_type = "A"
-  target    = linode_instance.planning_poker.ip_address
+  target    = tolist(linode_instance.planning_poker.ipv4)[0]
   ttl_sec   = 300
 }
 

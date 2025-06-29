@@ -6,7 +6,7 @@ output "instance_id" {
 
 output "instance_ip" {
   description = "Public IP address of the instance"
-  value       = linode_instance.planning_poker.ip_address
+  value       = tolist(linode_instance.planning_poker.ipv4)[0]
 }
 
 output "instance_label" {
@@ -16,12 +16,12 @@ output "instance_label" {
 
 output "planning_poker_url" {
   description = "URL to access Planning Poker"
-  value       = "http://${linode_instance.planning_poker.ip_address}:8080"
+  value       = "http://${tolist(linode_instance.planning_poker.ipv4)[0]}:8080"
 }
 
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh root@${linode_instance.planning_poker.ip_address}"
+  value       = "ssh root@${tolist(linode_instance.planning_poker.ipv4)[0]}"
 }
 
 output "firewall_id" {
@@ -37,8 +37,8 @@ output "domain_name" {
 output "status_check" {
   description = "Commands to check application status"
   value = {
-    curl_test     = "curl -I http://${linode_instance.planning_poker.ip_address}:8080"
-    ssh_logs      = "ssh root@${linode_instance.planning_poker.ip_address} 'journalctl -u planning-poker -f'"
-    docker_status = "ssh root@${linode_instance.planning_poker.ip_address} 'docker ps'"
+    curl_test     = "curl -I http://${tolist(linode_instance.planning_poker.ipv4)[0]}:8080"
+    ssh_logs      = "ssh root@${tolist(linode_instance.planning_poker.ipv4)[0]} 'journalctl -u planning-poker -f'"
+    docker_status = "ssh root@${tolist(linode_instance.planning_poker.ipv4)[0]} 'docker ps'"
   }
 }
