@@ -4,6 +4,22 @@ A real-time WebSocket-based planning poker application for agile teams.
 
 ## Getting Started
 
+### Using Docker (Recommended)
+
+1. Start the application:
+   ```bash
+   make dev
+   ```
+
+2. Open your browser to `http://localhost:8080`
+
+3. Stop the application:
+   ```bash
+   make down
+   ```
+
+### Using Go directly
+
 1. Install dependencies:
    ```bash
    go mod tidy
@@ -25,6 +41,7 @@ A real-time WebSocket-based planning poker application for agile teams.
 - Reveal votes functionality
 - Start new rounds
 - Set story descriptions
+- Docker containerization for easy deployment
 
 ## How to Use
 
@@ -35,6 +52,14 @@ A real-time WebSocket-based planning poker application for agile teams.
 5. Reveal votes to see everyone's estimates
 6. Start a new round for the next story
 
+## Docker Commands
+
+- `make dev` - Start development environment
+- `make down` - Stop all services
+- `make logs` - View application logs
+- `make clean` - Clean up Docker resources
+- `make build` - Build Docker image
+
 ## Development
 
-This version includes basic planning poker functionality with real-time updates.
+This version includes basic planning poker functionality with Docker containerization for easy deployment and development.
