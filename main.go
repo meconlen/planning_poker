@@ -30,7 +30,7 @@ func main() {
 
 	log.Printf("Planning Poker server starting on :%s", port)
 	log.Printf("Open http://localhost:%s in your browser", port)
-	
+
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}

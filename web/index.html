@@ -310,6 +310,32 @@
         </div>
     </div>
 
+    <!-- Waiting Room -->
+    <div id="waitingRoom" class="join-form hidden">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">⏳ Waiting Room</h2>
+        <div style="text-align: center;">
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">⏰</div>
+                <p id="waitingMessage" style="font-size: 18px; color: #6c757d; margin-bottom: 20px;">
+                    Waiting for the session creator to start the session...
+                </p>
+                <div style="background: #f8f9fa; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #495057;">
+                        <strong>Session ID:</strong> <span id="waitingSessionId"></span><br>
+                        <strong>Your Name:</strong> <span id="waitingUserName"></span>
+                    </p>
+                </div>
+                <div style="background: #e3f2fd; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+                    <p style="margin: 0 0 10px 0; color: #1976d2; font-weight: bold;">👥 Participants in session:</p>
+                    <div id="waitingParticipants" style="color: #555;">
+                        <!-- Participants will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <button onclick="leaveWaitingRoom()" class="btn btn-secondary">Leave Session</button>
+        </div>
+    </div>
+
     <!-- Main App -->
     <div id="app" class="container hidden">
         <div class="header">
@@ -431,7 +457,7 @@
                 }
 
                 // Show session created UI
-                const sessionUrl = `${window.location.origin}?session=${createdSessionId}&user=${encodeURIComponent(userName)}`;
+                const sessionUrl = `${window.location.origin}?session=${createdSessionId}`;
                 document.getElementById('sessionUrl').value = sessionUrl;
                 
                 document.getElementById('joinTab').classList.add('hidden');
@@ -465,7 +491,15 @@
 
         // Start the session (for session creator)
         function startSession() {
+            // First connect to WebSocket, then start session
             connectWebSocket();
+            
+            // Wait a moment for connection to establish, then start session
+            setTimeout(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    sendMessage('start_session');
+                }
+            }, 500);
         }
 
         // Check for URL parameters on page load
@@ -474,14 +508,27 @@
             const sessionParam = urlParams.get('session');
             const userParam = urlParams.get('user');
             
-            if (sessionParam && userParam) {
-                // Auto-fill and join session
+            if (sessionParam) {
+                // Pre-fill session ID
                 document.getElementById('sessionId').value = sessionParam;
-                document.getElementById('userName').value = decodeURIComponent(userParam);
-                // Auto-join after a short delay
-                setTimeout(() => {
-                    joinSession();
-                }, 500);
+                
+                if (userParam) {
+                    // Pre-fill user name and show join tab
+                    document.getElementById('userName').value = decodeURIComponent(userParam);
+                    showJoinTab();
+                    
+                    // Auto-join after a short delay to let the UI update
+                    setTimeout(() => {
+                        joinSession();
+                    }, 100);
+                } else {
+                    // Show join tab and prompt for name
+                    showJoinTab();
+                    document.getElementById('userName').focus();
+                }
+            } else {
+                // No session in URL, show create tab by default
+                showCreateTab();
             }
         });
 
@@ -504,7 +551,10 @@
         }
 
         function connectWebSocket() {
-            const wsUrl = `ws://localhost:8080/ws?session=${currentSession}&user=${encodeURIComponent(currentUser)}`;
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const creatorParam = createdSessionId === currentSession ? '&creator=true' : '';
+            const wsUrl = `${protocol}//${host}/ws?session=${currentSession}&user=${encodeURIComponent(currentUser)}${creatorParam}`;
             socket = new WebSocket(wsUrl);
 
             socket.onopen = function() {
@@ -531,8 +581,10 @@
         }
 
         function handleMessage(message) {
+            console.log('Received message:', message.type, message.data);
             switch (message.type) {
                 case 'session_state':
+                    console.log('Processing session_state with status:', message.data?.status);
                     updateSessionState(message.data);
                     break;
                 case 'user_joined':
@@ -541,10 +593,48 @@
                 case 'user_left':
                     console.log('User left:', message.data);
                     break;
+                case 'waiting_room':
+                    console.log('Entering waiting room:', message.data);
+                    showWaitingRoom(message.data);
+                    break;
+                case 'start_session':
+                    console.log('Session started:', message.data);
+                    hideWaitingRoom();
+                    // Request updated session state in case of any race conditions
+                    setTimeout(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            console.log('Requesting session state update after start');
+                        }
+                    }, 100);
+                    break;
             }
         }
 
         function updateSessionState(state) {
+            console.log('updateSessionState called with:', state);
+            
+            // Check if we need to exit waiting room
+            const isInWaitingRoom = !document.getElementById('waitingRoom').classList.contains('hidden');
+            console.log('Current UI state - in waiting room:', isInWaitingRoom, 'session status:', state.status);
+            
+            if (state.status === 'active' && isInWaitingRoom) {
+                console.log('Session is now active, leaving waiting room');
+                hideWaitingRoom();
+            }
+            
+            // If we're in waiting room and session is still waiting, update waiting room info
+            if (isInWaitingRoom && state.status === 'waiting') {
+                console.log('Updating waiting room with participant info');
+                updateWaitingRoomParticipants(state);
+                return;
+            }
+            
+            // Only continue with full UI updates if we're in the main app
+            if (isInWaitingRoom) {
+                console.log('Still in waiting room, skipping full UI updates');
+                return;
+            }
+            
             // Update story
             document.getElementById('storyInput').value = state.currentStory || '';
 
@@ -722,12 +812,70 @@
             document.getElementById('userName').value = '';
         }
 
+        // Waiting Room Management
+        function showWaitingRoom(data) {
+            document.getElementById('joinForm').classList.add('hidden');
+            document.getElementById('app').classList.add('hidden');
+            document.getElementById('waitingRoom').classList.remove('hidden');
+            
+            document.getElementById('waitingSessionId').textContent = data.sessionId || currentSession;
+            document.getElementById('waitingUserName').textContent = currentUser;
+            document.getElementById('waitingMessage').textContent = data.message || 'Waiting for the session creator to start the session...';
+        }
+
+        function hideWaitingRoom() {
+            document.getElementById('waitingRoom').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            // Ensure session info is populated
+            document.getElementById('currentSessionId').textContent = currentSession;
+            document.getElementById('currentUserName').textContent = currentUser;
+        }
+
+        function leaveWaitingRoom() {
+            if (socket) {
+                socket.close();
+            }
+            
+            document.getElementById('waitingRoom').classList.add('hidden');
+            document.getElementById('joinForm').classList.remove('hidden');
+            
+            // Reset form
+            document.getElementById('sessionId').value = '';
+            document.getElementById('userName').value = '';
+        }
+
+        function startSessionAsCreator() {
+            if (!isModerator || !createdSessionId) {
+                alert('Only the session creator can start the session');
+                return;
+            }
+            
+            sendMessage('start_session');
+        }
+
         // Handle page unload
         window.addEventListener('beforeunload', function() {
             if (socket) {
                 socket.close();
             }
         });
+
+        function updateWaitingRoomParticipants(state) {
+            const participantsDiv = document.getElementById('waitingParticipants');
+            if (!participantsDiv) return;
+            
+            const users = Object.values(state.users || {});
+            if (users.length === 0) {
+                participantsDiv.innerHTML = '<em>No participants yet</em>';
+                return;
+            }
+            
+            participantsDiv.innerHTML = users.map(user => {
+                const badge = user.isModerator ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px;">MODERATOR</span>' : '';
+                return `<div style="margin-bottom: 5px;">👤 ${user.name}${badge}</div>`;
+            }).join('');
+        }
     </script>
 </body>
 </html>
