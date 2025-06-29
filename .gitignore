@@ -1,6 +1,7 @@
 # Binaries
 planning-poker
 planning-poker.exe
+main
 
 # Go test coverage
 *.out
