@@ -260,7 +260,7 @@ jobs:
           echo "release_notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: Planning Poker ${{ steps.tag.outputs.tag }}
@@ -273,6 +273,7 @@ jobs:
             dist/planning-poker-windows-amd64.zip
             dist/planning-poker-docker-${{ steps.tag.outputs.tag }}.tar.gz
             dist/planning-poker-documentation.pdf
+          generate_release_notes: true
           draft: false
           prerelease: false
         env:
