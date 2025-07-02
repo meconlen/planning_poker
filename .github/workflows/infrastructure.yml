@@ -28,6 +28,8 @@ jobs:
         packer init planning-poker.pkr.hcl
 
     - name: Validate Packer configuration
+      env:
+        LINODE_TOKEN: "dummy-token-for-validation"
       run: |
         cd infrastructure/packer
         packer validate planning-poker.pkr.hcl
