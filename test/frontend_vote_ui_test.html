@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Vote UI Test</title>
+    <style>
+        .voting-card { padding: 10px; margin: 5px; border: 1px solid #ccc; }
+        .voting-card.selected { background-color: #007bff; color: white; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Minimal DOM structure needed for the test -->
+    <div id="waitingRoom" class="hidden"></div>
+    <div id="app">
+        <input id="storyInput" />
+        <div class="voting-cards">
+            <div class="voting-card" onclick="vote('1')">1</div>
+            <div class="voting-card" onclick="vote('3')">3</div>
+            <div class="voting-card" onclick="vote('5')">5</div>
+        </div>
+        <div id="usersGrid"></div>
+        <button id="revealBtn" onclick="revealVotes()">Reveal</button>
+        <button id="newRoundBtn" onclick="newRound()">New Round</button>
+        <button id="setStoryBtn" onclick="setStory()">Set Story</button>
+        <button id="shareBtn" onclick="shareSession()">Share</button>
+    </div>
+
+    <script>
+        // Minimal implementation of the Planning Poker JavaScript functions
+        // (extracted from web/index.html for testing)
+        
+        let currentUser = null;
+        let currentUserId = null;
+        let isModerator = false;
+        let myVote = null;
+        let socket = null; // Mock WebSocket
+
+        // Mock WebSocket
+        function sendMessage(type, data) {
+            console.log('Mock sendMessage:', type, data);
+        }
+
+        function vote(value) {
+            // Clear previous selection
+            document.querySelectorAll('.voting-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Set new selection
+            myVote = value;
+            event.target.classList.add('selected');
+            
+            sendMessage('vote', { vote: value });
+        }
+
+        function newRound() {
+            if (!isModerator) {
+                alert('Only the moderator can start a new round');
+                return;
+            }
+            
+            // Clear UI - THIS ONLY HAPPENS FOR MODERATOR
+            document.querySelectorAll('.voting-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            myVote = null;
+
+            sendMessage('new_round');
+        }
+
+        function updateSessionState(state) {
+            console.log('updateSessionState called with:', state);
+            
+            // Check if we need to exit waiting room
+            const isInWaitingRoom = !document.getElementById('waitingRoom').classList.contains('hidden');
+            
+            if (state.status === 'active' && isInWaitingRoom) {
+                hideWaitingRoom();
+            }
+            
+            if (isInWaitingRoom && state.status === 'waiting') {
+                return;
+            }
+            
+            if (isInWaitingRoom) {
+                return;
+            }
+            
+            // Update story
+            document.getElementById('storyInput').value = state.currentStory || '';
+
+            // Find current user and check if they're moderator
+            let currentUserData = null;
+            Object.values(state.users || {}).forEach(user => {
+                if (user.name === currentUser) {
+                    currentUserData = user;
+                    currentUserId = user.id;
+                    isModerator = user.isModerator;
+                }
+            });
+
+            // Show/hide moderator controls
+            const revealBtn = document.getElementById('revealBtn');
+            const newRoundBtn = document.getElementById('newRoundBtn');
+            const setStoryBtn = document.getElementById('setStoryBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const storyInput = document.getElementById('storyInput');
+
+            if (isModerator) {
+                revealBtn.style.display = 'inline-block';
+                newRoundBtn.style.display = 'inline-block';
+                setStoryBtn.style.display = 'inline-block';
+                shareBtn.style.display = 'inline-block';
+                storyInput.disabled = false;
+            } else {
+                revealBtn.style.display = 'none';
+                newRoundBtn.style.display = 'none';
+                setStoryBtn.style.display = 'none';
+                shareBtn.style.display = 'none';
+                storyInput.disabled = true;
+            }
+
+            // BUG: This function should clear vote UI when votes are cleared
+            // but it currently doesn't detect when a new round has started
+            
+            // The fix should go here - detect if votes were cleared and reset UI
+        }
+
+        function hideWaitingRoom() {
+            document.getElementById('waitingRoom').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }
+
+        // Test Functions
+        function runFrontendTests() {
+            console.log('🧪 Running Frontend Vote UI Tests...');
+            
+            // Test 1: Simulate moderator behavior (currently works)
+            console.log('\n📝 Test 1: Moderator vote clearing');
+            currentUser = 'Alice';
+            isModerator = true;
+            
+            // Moderator votes
+            vote('5');
+            let selectedCards = document.querySelectorAll('.voting-card.selected');
+            console.log('✓ Moderator voted, selected cards:', selectedCards.length);
+            
+            // Moderator starts new round
+            newRound();
+            selectedCards = document.querySelectorAll('.voting-card.selected');
+            console.log('✓ Moderator started new round, selected cards:', selectedCards.length);
+            console.log('✓ Moderator myVote:', myVote);
+            
+            if (selectedCards.length === 0 && myVote === null) {
+                console.log('✅ Test 1 PASSED: Moderator vote UI correctly cleared');
+            } else {
+                console.log('❌ Test 1 FAILED: Moderator vote UI not cleared');
+            }
+            
+            // Test 2: Simulate participant behavior (BUG - currently fails)
+            console.log('\n📝 Test 2: Participant vote clearing (BUG REPRODUCTION)');
+            currentUser = 'Bob';
+            isModerator = false;
+            
+            // Participant votes
+            vote('3');
+            selectedCards = document.querySelectorAll('.voting-card.selected');
+            console.log('✓ Participant voted, selected cards:', selectedCards.length);
+            console.log('✓ Participant myVote:', myVote);
+            
+            // Simulate receiving session state update after moderator starts new round
+            const sessionStateAfterNewRound = {
+                status: 'active',
+                currentStory: 'Test Story',
+                votesRevealed: false,
+                users: {
+                    'alice-id': {
+                        id: 'alice-id',
+                        name: 'Alice',
+                        isModerator: true,
+                        vote: null  // Backend correctly cleared vote
+                    },
+                    'bob-id': {
+                        id: 'bob-id', 
+                        name: 'Bob',
+                        isModerator: false,
+                        vote: null  // Backend correctly cleared vote
+                    }
+                }
+            };
+            
+            updateSessionState(sessionStateAfterNewRound);
+            selectedCards = document.querySelectorAll('.voting-card.selected');
+            console.log('✓ Participant received session state, selected cards:', selectedCards.length);
+            console.log('✓ Participant myVote after update:', myVote);
+            
+            if (selectedCards.length === 0 && myVote === null) {
+                console.log('✅ Test 2 PASSED: Participant vote UI correctly cleared');
+            } else {
+                console.log('❌ Test 2 FAILED: Participant vote UI NOT cleared (BUG REPRODUCED)');
+                console.log('   🐛 Vote button still selected, myVote still set');
+                console.log('   🔧 This is the bug we need to fix!');
+            }
+            
+            return {
+                moderatorWorks: selectedCards.length === 0 && myVote === null,
+                participantBug: selectedCards.length > 0 || myVote !== null
+            };
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', function() {
+            const results = runFrontendTests();
+            
+            console.log('\n📊 Test Summary:');
+            console.log('Moderator vote clearing:', results.moderatorWorks ? '✅ WORKS' : '❌ BROKEN');
+            console.log('Participant bug reproduced:', results.participantBug ? '🐛 BUG CONFIRMED' : '✅ FIXED');
+            
+            if (results.participantBug) {
+                console.log('\n💡 To fix: Add vote clearing logic to updateSessionState() function');
+            }
+        });
+    </script>
+</body>
+</html>
