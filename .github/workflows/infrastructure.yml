@@ -21,6 +21,11 @@ jobs:
       with:
         version: 'latest'
 
+    - name: Initialize Packer plugins
+      run: |
+        cd infrastructure/packer
+        packer init planning-poker.pkr.hcl
+
     - name: Validate Packer configuration
       run: |
         cd infrastructure/packer
