@@ -52,7 +52,7 @@ jobs:
       run: go test -v ./...
 
     - name: Run frontend bug tests
-      run: node test/frontend_vote_bug_test.js
+      run: node test/verify_fix.js
 
     - name: Run go vet
       run: go vet ./...
