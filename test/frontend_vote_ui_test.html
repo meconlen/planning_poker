@@ -120,10 +120,9 @@
                 storyInput.disabled = true;
             }
 
-            // BUG: This function should clear vote UI when votes are cleared
-            // but it currently doesn't detect when a new round has started
-            
-            // The fix should go here - detect if votes were cleared and reset UI
+            // BUG: Missing vote UI clearing logic for non-moderators
+            // When all users have null votes (after new round), we should clear the vote UI
+            // but currently we don't - this is the bug we're testing!
         }
 
         function hideWaitingRoom() {
