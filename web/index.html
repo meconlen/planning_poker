@@ -671,6 +671,17 @@
                 storyInput.placeholder = 'Only the moderator can set stories';
             }
 
+            // Check if all users have null votes - if so, clear the voting UI
+            // This handles the case where moderator starts a new round and all votes are cleared
+            const allUsersHaveNullVotes = Object.values(state.users || {}).every(user => user.vote === null);
+            if (allUsersHaveNullVotes && myVote !== null) {
+                console.log('All users have null votes, clearing vote UI');
+                document.querySelectorAll('.voting-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                myVote = null;
+            }
+
             // Update users
             const usersGrid = document.getElementById('usersGrid');
             usersGrid.innerHTML = '';
