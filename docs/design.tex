@@ -866,6 +866,120 @@ systemctl restart planning-poker
     \item Firewall rules limit attack surface
 \end{itemize}
 
+\subsection{Production Deployment}
+
+\subsubsection{Successful IaC Implementation}
+
+The Infrastructure as Code deployment has been successfully validated and deployed to production on Linode cloud infrastructure. The deployment demonstrates the complete automation pipeline from source code to running application.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Status} \\
+\midrule
+Packer Image Build & \textcolor{green}{\checkmark} Completed Successfully \\
+Terraform Infrastructure & \textcolor{green}{\checkmark} Deployed and Running \\
+Application Health & \textcolor{green}{\checkmark} Passing All Checks \\
+Security Configuration & \textcolor{green}{\checkmark} Firewall Rules Active \\
+DNS Resolution & \textcolor{green}{\checkmark} Accessible via IP \\
+Container Runtime & \textcolor{green}{\checkmark} Docker Service Running \\
+\bottomrule
+\end{tabular}
+\caption{Production Deployment Status}
+\label{tab:deployment-status}
+\end{table}
+
+\subsubsection{Production Environment Details}
+
+The current production deployment configuration:
+
+\begin{lstlisting}[language=bash, caption=Production Infrastructure Configuration]
+# Infrastructure Details
+Region: us-east (Linode)
+Instance Type: g6-nanode-1 (1GB RAM, 1 vCPU, 25GB SSD)
+Monthly Cost: $5.00 USD
+
+# Network Configuration  
+Public IP: 172.104.9.12
+Firewall ID: 2942935
+Instance ID: 79489141
+
+# Application Access
+Application URL: http://172.104.9.12:8080
+SSH Access: ssh root@172.104.9.12
+Container: planning-poker:v0.8.2
+
+# Service Status
+Planning Poker Service: Active (running)
+Docker Container: Running (auto-restart enabled)
+Health Checks: Passing
+Uptime: Since deployment
+\end{lstlisting}
+
+\subsubsection{Deployment Validation Results}
+
+The production deployment has been thoroughly tested and validated:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Test Category} & \textbf{Test Case} & \textbf{Result} \\
+\midrule
+Infrastructure & Packer image creation & \textcolor{green}{PASS} \\
+Infrastructure & Terraform resource provisioning & \textcolor{green}{PASS} \\
+Infrastructure & Firewall rule application & \textcolor{green}{PASS} \\
+Application & HTTP endpoint accessibility & \textcolor{green}{PASS} \\
+Application & Docker container health & \textcolor{green}{PASS} \\
+Application & Service auto-start capability & \textcolor{green}{PASS} \\
+Security & SSH key authentication & \textcolor{green}{PASS} \\
+Security & Port access restrictions & \textcolor{green}{PASS} \\
+Automation & GitHub Actions validation & \textcolor{green}{PASS} \\
+Documentation & IaC process documentation & \textcolor{green}{PASS} \\
+\bottomrule
+\end{tabular}
+\caption{Production Deployment Validation Matrix}
+\label{tab:deployment-validation}
+\end{table}
+
+\subsubsection{Operational Commands}
+
+Essential commands for production environment management:
+
+\begin{lstlisting}[language=bash, caption=Production Management Commands]
+# Application Health Check
+curl -I http://172.104.9.12:8080
+
+# Service Management
+ssh root@172.104.9.12 'systemctl status planning-poker'
+ssh root@172.104.9.12 'systemctl restart planning-poker'
+
+# Container Management  
+ssh root@172.104.9.12 'docker ps'
+ssh root@172.104.9.12 'docker logs planning-poker'
+
+# Infrastructure Management
+terraform show                    # View current state
+terraform plan                    # Preview changes
+terraform output                  # Show deployment outputs
+
+# Image Management
+packer build planning-poker.pkr.hcl  # Rebuild image
+\end{lstlisting}
+
+\subsubsection{Lessons Learned}
+
+Key insights from the production deployment process:
+
+\begin{itemize}
+    \item \textbf{SSH Key Management}: Terraform provisioners require passwordless SSH keys. Passphrase-protected keys must be handled differently or provisioning logic moved to Packer images.
+    \item \textbf{Image Dependency}: Custom Packer images significantly reduce deployment complexity by pre-installing dependencies and deployment scripts.
+    \item \textbf{Health Monitoring}: Automated health checks in deployment scripts provide early failure detection and improve deployment reliability.
+    \item \textbf{Security by Design}: Implementing firewall rules and SSH key authentication from the start prevents security gaps during deployment.
+    \item \textbf{Documentation Importance}: Comprehensive documentation of the IaC process enables reproducible deployments and team knowledge sharing.
+\end{itemize}
+
 \section{Future Enhancements}
 
 \subsection{Planned Features}
