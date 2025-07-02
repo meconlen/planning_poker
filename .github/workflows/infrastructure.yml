@@ -9,6 +9,7 @@ on:
     branches: [ main, dev ]
     paths:
       - 'infrastructure/**'
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   validate-packer:

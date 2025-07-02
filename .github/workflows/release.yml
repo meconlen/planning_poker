@@ -9,8 +9,13 @@ permissions:
   contents: write
 
 jobs:
+  # Validate infrastructure before release
+  validate-infrastructure:
+    uses: ./.github/workflows/infrastructure.yml
+
   release:
     runs-on: ubuntu-latest
+    needs: validate-infrastructure
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

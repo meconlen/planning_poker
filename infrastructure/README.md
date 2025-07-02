@@ -2,6 +2,8 @@
 
 This directory contains Infrastructure as Code (IaC) for deploying Planning Poker to Linode using Packer and Terraform.
 
+**Status**: ✅ Production-ready and validated deployment pipeline
+
 ## Overview
 
 The infrastructure consists of two main components:
