@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     linode = {
       source  = "linode/linode"
@@ -30,7 +30,7 @@ variable "region" {
 variable "instance_type" {
   type        = string
   description = "Linode instance type"
-  default     = "g6-nanode-1"  # 1GB RAM, 1 CPU, 25GB storage - $5/month
+  default     = "g6-nanode-1" # 1GB RAM, 1 CPU, 25GB storage - $5/month
 }
 
 variable "instance_label" {
@@ -147,21 +147,21 @@ resource "linode_domain" "planning_poker" {
 }
 
 resource "linode_domain_record" "planning_poker_a" {
-  count     = var.create_domain ? 1 : 0
-  domain_id = linode_domain.planning_poker[0].id
-  name      = "@"
+  count       = var.create_domain ? 1 : 0
+  domain_id   = linode_domain.planning_poker[0].id
+  name        = "@"
   record_type = "A"
-  target    = tolist(linode_instance.planning_poker.ipv4)[0]
-  ttl_sec   = 300
+  target      = tolist(linode_instance.planning_poker.ipv4)[0]
+  ttl_sec     = 300
 }
 
 resource "linode_domain_record" "planning_poker_www" {
-  count     = var.create_domain ? 1 : 0
-  domain_id = linode_domain.planning_poker[0].id
-  name      = "www"
+  count       = var.create_domain ? 1 : 0
+  domain_id   = linode_domain.planning_poker[0].id
+  name        = "www"
   record_type = "A"
-  target    = tolist(linode_instance.planning_poker.ipv4)[0]
-  ttl_sec   = 300
+  target      = tolist(linode_instance.planning_poker.ipv4)[0]
+  ttl_sec     = 300
 }
 
 # Additional variables for domain (optional)
