@@ -52,7 +52,7 @@ variable "ssh_public_key" {
 
 variable "planning_poker_image" {
   type        = string
-  description = "Planning Poker Packer image ID"
+  description = "Planning Poker Packer image ID or label"
 }
 
 variable "tags" {
@@ -82,22 +82,6 @@ resource "linode_instance" "planning_poker" {
   # Firewall rules
   private_ip = false
 
-  # Ensure the instance is ready before proceeding
-  connection {
-    type        = "ssh"
-    host        = tolist(self.ipv4)[0]
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")  # Adjust path as needed
-    timeout     = "5m"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cloud-init status --wait",
-      "systemctl start planning-poker",
-      "systemctl status planning-poker --no-pager"
-    ]
-  }
 }
 
 # Create a Linode Firewall

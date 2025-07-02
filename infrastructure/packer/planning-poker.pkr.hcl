@@ -44,6 +44,9 @@ build {
 
   # Update system and install Docker
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
       "apt-get update",
       "apt-get upgrade -y",
@@ -76,13 +79,16 @@ build {
       
       # Verify installations
       "docker --version",
-      "docker-compose --version",
+      "docker compose version",
       "gh --version"
     ]
   }
 
   # Create planning poker service directory
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
       "mkdir -p /opt/planning-poker",
       "chown root:root /opt/planning-poker",
@@ -98,6 +104,9 @@ build {
 
   # Make deployment script executable and create systemd service
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
       "chmod +x /opt/planning-poker/deploy.sh",
       
@@ -127,11 +136,13 @@ build {
 
   # Final system preparation
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
-      # Clear logs and history for cleaner image
-      "truncate -s 0 /var/log/*log",
-      "history -c",
-      "cat /dev/null > ~/.bash_history",
+      # Clear logs for cleaner image
+      "truncate -s 0 /var/log/*log || true",
+      "rm -f /root/.bash_history || true",
       
       # Ensure Docker daemon is running for next boot
       "systemctl is-enabled docker"

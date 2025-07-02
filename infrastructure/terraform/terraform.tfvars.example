@@ -5,7 +5,7 @@
 linode_token      = "your-linode-api-token-here"
 root_password     = "your-secure-root-password-here"
 ssh_public_key    = "ssh-rsa AAAAB3NzaC1yc2E... your-public-key-here"
-planning_poker_image = "planning-poker-docker-2025-06-29"  # Replace with your Packer image label
+planning_poker_image = "planning-poker-docker-YYYY-MM-DD"  # Replace with your Packer image label
 
 # Optional variables
 region         = "us-east"
